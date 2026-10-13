@@ -230,10 +230,10 @@
             localStorage.theme = htmlEl.classList.contains('dark') ? 'dark' : 'light';
         };
 
-        // --- Bộ nhớ Regex lưu sẵn (Cập nhật đầy đủ từ khóa rác) ---
+        // --- Bộ nhớ Regex lưu sẵn (Cập nhật chuẩn xác từng từ khóa rác) ---
         const REGEX_PRESETS = {
             ads_zhihu: {
-                find: ".*(xbanxia|proton\\.me|Sponsored|You May Like|Techno Mag|Forex|Spread|chứng khoán|如有惡意廣告|請將截屏或錄屏發送至|撤消).*$",
+                find: "(xbanxia|proton\\.me|Sponsored|You May Like|Techno Mag|Forex|Spread|chứng khoán|如有惡意廣告|請將截屏或錄屏發送至|撤消)",
                 replace: "",
                 isRegex: true
             },
@@ -310,7 +310,7 @@
                 fileType = "txt";
                 loadTxtFile(file);
             } else {
-                showAlert("Định dạng file không hỗ trợ! Vول lòng chọn file .epub hoặc .txt");
+                showAlert("Định dạng file không hỗ trợ! Vui lòng chọn file .epub hoặc .txt");
             }
         });
 
@@ -385,7 +385,6 @@
                 try {
                     const text = event.target.result;
                     
-                    // Thuật toán tách chương TXT chuẩn xác 100% không bị nhân đôi
                     const chapterHeaderRegex = /(?:^|\n)(第\s*[0-9一二三四五六七八九十百千万零]+\s*章[^\n]*)/g;
                     let matches = [];
                     let match;
@@ -407,7 +406,6 @@
                             let end = (i + 1 < matches.length) ? matches[i + 1].index : text.length;
                             let rawChapterText = text.substring(start, end).trim();
 
-                            // Xóa dòng tiêu đề trùng lặp ở đầu nội dung chương
                             let lines = rawChapterText.split(/\r?\n/);
                             if (lines.length > 0 && lines[0].trim().includes(title)) {
                                 lines.shift();
@@ -554,44 +552,38 @@
             typeTimeout = setTimeout(() => { handleSaveCurrent(); }, 1500);
         });
 
-        // --- Dọn rác TOÀN BỘ TRUYỆN (Đã cập nhật đủ từ khóa thông báo cáo cáo) ---
+        // --- Dọn rác TOÀN BỘ TRUYỆN (Đã sửa lỗi quét sạch mọi vị trí, kể cả chương 1 và không bị đơ máy) ---
         function handleCleanAllChapters() {
             if(spine.length === 0) return showAlert("Chưa có chương nào được tải.");
             
-            showConfirm(`Bạn có chắc muốn dọn rác TOÀN BỘ ${spine.length} chương?\nThao tác này sẽ dọn sạch quảng cáo, email rác và thông báo cáo cáo ác ý trên tất cả các chương!`, () => {
+            showConfirm(`Bạn có chắc muốn dọn rác TOÀN BỘ ${spine.length} chương?\nThao tác này sẽ dọn sạch quảng cáo, email rác và thông báo cáo cáo trên tất cả các chương (bao gồm cả chương 1)!`, () => {
                 showLoading(`Đang quét và dọn rác ${spine.length} chương...`);
                 
+                // Đồng bộ nội dung chương đang mở trước khi quét toàn bộ
                 handleSaveCurrent();
 
                 let totalAdsRemoved = 0;
                 let totalTagsRemoved = 0;
 
+                // Sử dụng biểu thức quét linh hoạt (không bị kẹt ở đầu/cuối dòng)
+                const junkRegex = /(xbanxia|proton\.me|Sponsored|You May Like|Techno Mag|Forex|Spread|chứng khoán|如有惡意廣告|請將截屏或錄屏發送至|撤消)/i;
+
                 spine.forEach(id => {
-                    let htmlStr = fileContents[id];
+                    let htmlStr = fileContents[id] || "";
                     const parser = new DOMParser();
                     const doc = parser.parseFromString(htmlStr, 'text/html');
                     
-                    // Quét các thẻ HTML chứa từ khóa rác
-                    const elements = doc.querySelectorAll('p, div, span, li, b, i');
+                    // 1. Quét qua toàn bộ thẻ đoạn văn, div, span, list... để tìm và xóa
+                    const elements = doc.querySelectorAll('p, div, span, li, b, i, em, strong');
                     elements.forEach(el => {
                         const text = el.textContent || "";
-                        if (
-                            text.includes('xbanxia') || 
-                            text.includes('proton.me') ||
-                            text.includes('如有惡意廣告') ||
-                            text.includes('請將截屏或錄屏發送至') ||
-                            text.includes('Sponsored') ||
-                            text.includes('You May Like') ||
-                            text.includes('Techno Mag') ||
-                            text.includes('Forex') ||
-                            text.includes('Spread')
-                        ) {
+                        if (junkRegex.test(text)) {
                             el.remove();
                             totalAdsRemoved++;
                         }
                     });
 
-                    // Dọn style nội tuyến và thẻ rỗng
+                    // 2. Dọn sạch các thẻ rỗng hoặc style dư thừa
                     const allElements = doc.querySelectorAll('*');
                     allElements.forEach(el => {
                         if (el.hasAttribute('style')) el.removeAttribute('style');
@@ -605,21 +597,20 @@
                         }
                     });
 
-                    // Quét phủ đầu toàn diện bằng Regex
                     let cleanBodyHtml = doc.body ? doc.body.innerHTML : htmlStr;
-                    cleanBodyHtml = cleanBodyHtml.replace(/<p[^>]*>.*?(xbanxia|proton\.me|Sponsored|You May Like|Techno Mag|Forex|Spread|如有惡意廣告|請將截屏或錄屏發送至).*?<\/p>/gi, '');
 
                     fileContents[id] = htmlStr.replace(/(<body[^>]*>)([\s\S]*?)(<\/body>)/i, function(match, p1, p2, p3) {
                         return p1 + cleanBodyHtml + p3;
                     });
                 });
 
+                // Tải lại chương hiện tại để hiển thị ngay kết quả
                 if (currentActiveId) {
                     openChapter(currentActiveId);
                 }
 
                 hideLoading();
-                showAlert(`Dọn rác toàn bộ truyện thành công!\n- Đã quét qua: ${spine.length} chương\n- Đã xóa: ${totalAdsRemoved} vị trí chứa rác / quảng cáo\n- Đã dọn: ${totalTagsRemoved} thẻ rỗng.`);
+                showAlert(`Dọn rác toàn bộ truyện thành công!\n- Đã quét qua: ${spine.length} chương (Bao gồm chương 1)\n- Đã xóa: ${totalAdsRemoved} vị trí chứa rác / quảng cáo\n- Đã dọn: ${totalTagsRemoved} thẻ rỗng.`);
             });
         }
 
