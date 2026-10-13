@@ -56,6 +56,11 @@
         .spinner { border: 4px solid rgba(0, 102, 204, 0.1); width: 48px; height: 48px; border-radius: 50%; border-left-color: #0066cc; animation: spin 1s linear infinite; }
         .dark .spinner { border: 4px solid rgba(59, 130, 246, 0.1); border-left-color: #3b82f6; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* Toast Notification Animation */
+        #toast {
+            transition: transform 0.3s ease, opacity 0.3s ease;
+        }
     </style>
 </head>
 <body class="h-screen flex flex-col overflow-hidden text-slate-800 dark:text-slate-200 transition-colors duration-200">
@@ -110,7 +115,7 @@
             <!-- Editor Toolbar -->
             <div id="toolbar" class="h-12 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 px-3 flex items-center justify-between hidden">
                 <div class="flex items-center gap-1.5">
-                    <button onclick="handleSaveCurrent()" class="px-2.5 py-1.5 rounded bg-green-50 text-green-600 hover:bg-green-100 dark:bg-green-500/10 dark:text-green-400 dark:hover:bg-green-500/20 text-sm font-medium transition-colors" title="Lưu thủ công"><i class="fa-solid fa-save mr-1"></i> Lưu</button>
+                    <button onclick="handleSaveCurrent(true)" class="px-2.5 py-1.5 rounded bg-green-50 text-green-600 hover:bg-green-100 dark:bg-green-500/10 dark:text-green-400 dark:hover:bg-green-500/20 text-sm font-medium transition-colors" title="Lưu thủ công"><i class="fa-solid fa-save mr-1"></i> Lưu</button>
                     
                     <div class="w-px h-5 bg-slate-200 dark:bg-slate-600 mx-1"></div>
                     
@@ -147,6 +152,14 @@
             </div>
         </section>
     </main>
+
+    <!-- Toast Notification Nhỏ Gọn (Góc trên bên phải) -->
+    <div id="toast" class="fixed top-5 right-5 z-[120] transform translate-y-[-20px] opacity-0 pointer-events-none transition-all duration-300">
+        <div class="bg-slate-900 text-white dark:bg-white dark:text-slate-900 px-4 py-2.5 rounded-lg shadow-xl text-sm font-medium flex items-center gap-2.5 border border-slate-700 dark:border-slate-200">
+            <i class="fa-solid fa-circle-check text-green-400 dark:text-green-600"></i>
+            <span id="toast-message">Đã lưu thành công!</span>
+        </div>
+    </div>
 
     <!-- Loading Overlay -->
     <div id="loading-overlay" class="fixed inset-0 bg-slate-900/50 z-[100] flex flex-col items-center justify-center hidden">
@@ -253,6 +266,19 @@
             if(confirmCb) confirmCb(); 
             hideConfirm(); 
         };
+
+        // --- Hàm hiển thị Toast Notification nhỏ gọn ---
+        function showToast(message = "Đã lưu thành công!") {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-message').textContent = message;
+            toast.classList.remove('translate-y-[-20px]', 'opacity-0', 'pointer-events-none');
+            toast.classList.add('translate-y-0', 'opacity-100');
+            
+            setTimeout(() => {
+                toast.classList.remove('translate-y-0', 'opacity-100');
+                toast.classList.add('translate-y-[-20px]', 'opacity-0', 'pointer-events-none');
+            }, 2500);
+        }
 
         // --- Xử lý Mở file EPUB ---
         document.getElementById('file-input').addEventListener('change', function(e) {
@@ -394,7 +420,7 @@
         }
 
         function openChapter(id) {
-            handleSaveCurrent();
+            handleSaveCurrent(false); // Lưu ngầm chương cũ trước khi chuyển
 
             currentActiveId = id;
             const htmlStr = fileContents[id] || "";
@@ -411,37 +437,47 @@
             ui.toolbar.classList.remove('hidden');
         }
 
-        function handleSaveCurrent() {
+        // --- Hàm Lưu an toàn cho mọi chương (kể cả chapter_0.xhtml) kèm Toast thông báo ---
+        function handleSaveCurrent(showNotification = false) {
             if (!currentActiveId) return;
             const newBody = ui.editor.innerHTML;
             const oldHtml = fileContents[currentActiveId];
             
-            // Dùng cờ 'gis' để đảm bảo khớp đúng thẻ body ở mọi chương, kể cả chapter_0.xhtml xuống dòng
-            const bodyRegex = /(<body[^>]*>)([\s\S]*?)(<\/body>)/gis;
+            // Regex bóc tách thân thẻ body cực kỳ an toàn, chống cứng ngắc với mọi namespace hoặc xuống dòng
+            const bodyRegex = /(<body\b[^>]*>)([\s\S]*?)(<\/body\s*>)/gis;
             
             if (bodyRegex.test(oldHtml)) {
+                bodyRegex.lastIndex = 0;
                 fileContents[currentActiveId] = oldHtml.replace(bodyRegex, function(match, p1, p2, p3) {
                     return p1 + newBody + p3;
                 });
             } else {
-                fileContents[currentActiveId] = `<body>${newBody}</body>`;
+                if (oldHtml.includes('<html') && oldHtml.includes('</html>')) {
+                    fileContents[currentActiveId] = oldHtml.replace(/<\/html>/i, `<body>${newBody}</body></html>`);
+                } else {
+                    fileContents[currentActiveId] = `<body>${newBody}</body>`;
+                }
+            }
+
+            if (showNotification) {
+                showToast("Đã lưu nội dung chương thành công!");
             }
         }
 
         let typeTimeout;
         ui.editor.addEventListener('input', () => {
             clearTimeout(typeTimeout);
-            typeTimeout = setTimeout(() => { handleSaveCurrent(); }, 1500);
+            typeTimeout = setTimeout(() => { handleSaveCurrent(false); }, 1500);
         });
 
-        // --- DỌN SẠCH CHỈ ĐÚNG DÒNG QUẢNG CÁO (AN TOÀN TUYỆT ĐỐI KHÔNG XÓA NHẦM NỘI DUNG) ---
+        // --- DỌN SẠCH CHỈ ĐÚNG DÒNG QUẢNG CÁO (AN TOÀN TUYỆT ĐỐI) ---
         function handleCleanAllChapters() {
             if(spine.length === 0) return showAlert("Chưa có chương nào được tải.");
             
             showConfirm(`Bạn có chắc muốn quét và dọn sạch dòng quảng cáo "如有惡意廣告" trong toàn bộ ${spine.length} chương?`, () => {
                 showLoading(`Đang dọn sạch quảng cáo toàn truyện...`);
                 
-                handleSaveCurrent();
+                handleSaveCurrent(false);
 
                 let totalAdsRemoved = 0;
 
@@ -450,11 +486,9 @@
                     const parser = new DOMParser();
                     const doc = parser.parseFromString(htmlStr, 'text/html');
                     
-                    // Duyệt qua các thẻ cấp nhỏ (p, div, span, li, b, i, em, strong...) để tìm chính xác dòng chứa quảng cáo
                     const elements = doc.querySelectorAll('p, div, span, li, b, i, em, strong, section, blockquote');
                     elements.forEach(el => {
                         const text = el.textContent || "";
-                        // Chỉ xóa thẻ chứa đúng dòng rác mà không ảnh hưởng gì tới các thẻ chứa nội dung khác
                         if (text.includes("如有惡意廣告") || text.includes("截屏") || text.includes("發送至") || text.toLowerCase().includes("email protected")) {
                             el.remove();
                             totalAdsRemoved++;
@@ -463,9 +497,9 @@
 
                     let cleanBodyHtml = doc.body ? doc.body.innerHTML : htmlStr;
 
-                    // Cập nhật lại nội dung vào file với regex body hỗ trợ đa dòng (dotAll)
-                    const bodyRegex = /(<body[^>]*>)([\s\S]*?)(<\/body>)/gis;
+                    const bodyRegex = /(<body\b[^>]*>)([\s\S]*?)(<\/body\s*>)/gis;
                     if (bodyRegex.test(htmlStr)) {
+                        bodyRegex.lastIndex = 0;
                         fileContents[id] = htmlStr.replace(bodyRegex, function(match, p1, p2, p3) {
                             return p1 + cleanBodyHtml + p3;
                         });
@@ -498,7 +532,7 @@
             document.getElementById('find-replace-modal').classList.add('hidden');
             showLoading(`Đang thay thế hàng loạt trên ${spine.length} chương...`);
             
-            handleSaveCurrent();
+            handleSaveCurrent(false);
             let totalMatches = 0;
 
             try {
@@ -541,14 +575,14 @@
                 if(parts.length < 2) return showAlert("Lỗi khi tách nội dung.");
                 
                 ui.editor.innerHTML = parts[0];
-                handleSaveCurrent();
+                handleSaveCurrent(false);
                 
                 const timestamp = Date.now();
                 const newId = `chapter_split_${timestamp}`;
                 const newHref = `chapter_${timestamp}.xhtml`;
                 
                 const baseHtml = fileContents[currentActiveId];
-                const part2Html = baseHtml.replace(/(<body[^>]*>)([\s\S]*?)(<\/body>)/gis, '$1' + parts[1] + '$3');
+                const part2Html = baseHtml.replace(/(<body\b[^>]*>)([\s\S]*?)(<\/body\s*>)/gis, '$1' + parts[1] + '$3');
                 
                 manifest[newId] = newHref;
                 reverseManifest[newHref] = newId;
@@ -577,7 +611,7 @@
                 const nextBody = nextDoc.body ? nextDoc.body.innerHTML : fileContents[nextId];
                 
                 ui.editor.innerHTML = ui.editor.innerHTML + "<br/><br/><hr/><br/>" + nextBody;
-                handleSaveCurrent();
+                handleSaveCurrent(false);
                 
                 spine.splice(currIdx + 1, 1);
                 renderSpineList(ui.searchInput.value);
@@ -617,7 +651,7 @@
         }
 
         async function handleExportEpub() {
-            handleSaveCurrent();
+            handleSaveCurrent(false);
             
             if (!epubZip || !opfDoc) {
                 return showAlert("Chưa có dữ liệu EPUB hợp lệ để xuất.");
