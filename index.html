@@ -29,33 +29,33 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
 
     <style>
-        body { background-color: #f8fafc; }
-        .dark body { background-color: #0f172a; }
+        body { background-color: #f8fafc;[cite: 11] }
+        .dark body { background-color: #0f172a;[cite: 11] }
 
         /* Custom Scrollbar */
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-        .dark ::-webkit-scrollbar-thumb { background: #475569; }
-        .dark ::-webkit-scrollbar-thumb:hover { background: #64748b; }
+        ::-webkit-scrollbar { width: 6px; height: 6px;[cite: 11] }
+        ::-webkit-scrollbar-track { background: transparent;[cite: 11] }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px;[cite: 11] }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8;[cite: 11] }
+        .dark ::-webkit-scrollbar-thumb { background: #475569;[cite: 11] }
+        .dark ::-webkit-scrollbar-thumb:hover { background: #64748b;[cite: 11] }
 
         /* Editor Styles */
-        #editor-content { outline: none; min-height: 100%; }
-        #editor-content img { max-width: 100%; height: auto; border-radius: 4px; margin: 10px 0; }
+        #editor-content { outline: none; min-height: 100%;[cite: 11] }
+        #editor-content img { max-width: 100%; height: auto; border-radius: 4px; margin: 10px 0;[cite: 11] }
         
         /* Drag Items */
-        .sortable-ghost { opacity: 0.4; background-color: #e2e8f0; }
-        .dark .sortable-ghost { background-color: #334155; }
-        .file-item { transition: background-color 0.2s ease, border-color 0.2s ease; }
-        .file-item.active { background-color: #eff6ff; border-left: 4px solid #0066cc; }
-        .dark .file-item.active { background-color: rgba(0, 102, 204, 0.15); border-left: 4px solid #3b82f6; }
+        .sortable-ghost { opacity: 0.4; background-color: #e2e8f0;[cite: 11] }
+        .dark .sortable-ghost { background-color: #334155;[cite: 11] }
+        .file-item { transition: background-color 0.2s ease, border-color 0.2s ease;[cite: 11] }
+        .file-item.active { background-color: #eff6ff; border-left: 4px solid #0066cc;[cite: 11] }
+        .dark .file-item.active { background-color: rgba(0, 102, 204, 0.15); border-left: 4px solid #3b82f6;[cite: 11] }
 
         /* Loading Spinner */
-        #loading-overlay { backdrop-filter: blur(4px); }
-        .spinner { border: 4px solid rgba(0, 102, 204, 0.1); width: 48px; height: 48px; border-radius: 50%; border-left-color: #0066cc; animation: spin 1s linear infinite; }
-        .dark .spinner { border: 4px solid rgba(59, 130, 246, 0.1); border-left-color: #3b82f6; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        #loading-overlay { backdrop-filter: blur(4px);[cite: 11] }
+        .spinner { border: 4px solid rgba(0, 102, 204, 0.1); width: 48px; height: 48px; border-radius: 50%; border-left-color: #0066cc; animation: spin 1s linear infinite;[cite: 11] }
+        .dark .spinner { border: 4px solid rgba(59, 130, 246, 0.1); border-left-color: #3b82f6;[cite: 11] }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); }[cite: 11] }
     </style>
 </head>
 <body class="h-screen flex flex-col overflow-hidden text-slate-800 dark:text-slate-200 transition-colors duration-200">
@@ -230,7 +230,7 @@
             localStorage.theme = htmlEl.classList.contains('dark') ? 'dark' : 'light';
         };
 
-        // --- Bộ nhớ Regex lưu sẵn (Cập nhật riêng biệt từng loại rác) ---
+        // --- Bộ nhớ Regex lưu sẵn ---
         const REGEX_PRESETS = {
             ads_zhihu: {
                 find: ".*(xbanxia|proton\\.me|Sponsored|You May Like|Techno Mag|Forex|Spread|chứng khoán|如有惡意廣告|請將截屏或錄屏發送至|撤消).*$",
@@ -537,11 +537,11 @@
             typeTimeout = setTimeout(() => { handleSaveCurrent(); }, 1500);
         });
 
-        // --- Dọn rác HTML TOÀN BỘ TRUYỆN (Hàng loạt - Tách biệt quét cụ thể từng loại rác) ---
+        // --- Dọn rác HTML TOÀN BỘ TRUYỆN (Hàng loạt - Quét sâu bao gồm cả chương 1) ---
         function handleCleanAllChapters() {
             if(spine.length === 0) return showAlert("Chưa có chương nào được tải.");
             
-            showConfirm(`Bạn có chắc muốn dọn rác TOÀN BỘ ${spine.length} chương?\nThao tác này sẽ quét sạch các dòng rác (xbanxia, thông báo bản quyền, rác quảng cáo kiểu You May Like/Sponsored...) và thẻ rỗng trên tất cả các chương cùng lúc!`, () => {
+            showConfirm(`Bạn có chắc muốn dọn rác TOÀN BỘ ${spine.length} chương?\nThao tác này sẽ quét sạch toàn bộ các dòng rác (xbanxia, thông báo bản quyền, quảng cáo...) và thẻ rỗng trên tất cả các chương (kể cả chương 1) cùng lúc!`, () => {
                 showLoading(`Đang quét và dọn rác ${spine.length} chương...`);
                 
                 handleSaveCurrent();
@@ -554,26 +554,25 @@
                     const parser = new DOMParser();
                     const doc = parser.parseFromString(htmlStr, 'text/html');
                     
-                    // Quét toàn bộ thẻ khối hoặc đoạn văn để lọc chính xác rác nằm ở giữa hoặc cuối
-                    const elements = doc.querySelectorAll('p, div, span, li, b, i');
+                    // Quét sâu toàn bộ các thẻ có khả năng chứa rác (bao gồm cả p, div, span, li, b, i, section)
+                    const elements = doc.querySelectorAll('p, div, span, li, b, i, section');
                     elements.forEach(el => {
-                        const text = el.textContent || "";
-                        
-                        // Kiểm tra nếu đoạn text chứa rác loại 1 (Email / Cảnh báo bản quyền)
-                        // Hoặc chứa rác loại 2 (Quảng cáo tiếng Anh dài kiểu You May Like / Sponsored / Techno Mag)
-                        if (
-                            text.includes('xbanxia') || 
-                            text.includes('proton.me') ||
-                            text.includes('如有惡意廣告') ||
-                            text.includes('請將截屏或錄屏發送至') ||
-                            text.includes('Sponsored') ||
-                            text.includes('You May Like') ||
-                            text.includes('Techno Mag') ||
-                            text.includes('Forex') ||
-                            text.includes('Spread')
-                        ) {
-                            el.remove();
-                            totalAdsRemoved++;
+                        if (el.children.length === 0) {
+                            const text = el.textContent || "";
+                            if (
+                                text.includes('xbanxia') || 
+                                text.includes('proton.me') ||
+                                text.includes('如有惡意廣告') ||
+                                text.includes('請將截屏或錄屏發送至') ||
+                                text.includes('Sponsored') ||
+                                text.includes('You May Like') ||
+                                text.includes('Techno Mag') ||
+                                text.includes('Forex') ||
+                                text.includes('Spread')
+                            ) {
+                                el.remove();
+                                totalAdsRemoved++;
+                            }
                         }
                     });
 
