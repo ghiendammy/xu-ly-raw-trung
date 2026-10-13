@@ -115,6 +115,7 @@
                     <div class="w-px h-5 bg-slate-200 dark:bg-slate-600 mx-1"></div>
                     
                     <button onclick="handleCleanAllChapters()" class="px-3 py-1.5 rounded bg-purple-50 text-purple-600 hover:bg-purple-100 dark:bg-purple-500/10 dark:text-purple-400 dark:hover:bg-purple-500/20 text-sm font-medium transition-colors shadow-sm" title="Xóa sạch toàn bộ rác [email protected] trên toàn truyện"><i class="fa-solid fa-broom mr-1.5"></i> Dọn Sạch Rác Toàn Truyện</button>
+                    <button onclick="openFindReplace()" class="px-2.5 py-1.5 rounded hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-sm font-medium transition-colors"><i class="fa-solid fa-magnifying-glass mr-1"></i> Regex & Tìm kiếm</button>
                     
                     <div class="w-px h-5 bg-slate-200 dark:bg-slate-600 mx-1"></div>
                     
@@ -174,6 +175,32 @@
             <div class="flex justify-end gap-2">
                 <button onclick="hideConfirm()" class="bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-800 dark:text-white px-4 py-1.5 rounded text-sm font-medium">Hủy</button>
                 <button id="confirm-yes-btn" class="bg-red-500 hover:bg-red-600 text-white px-4 py-1.5 rounded text-sm font-medium shadow-sm">Đồng ý</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Find & Replace Modal -->
+    <div id="find-replace-modal" class="fixed inset-0 bg-slate-900/60 z-[105] flex items-center justify-center hidden">
+        <div class="bg-white dark:bg-slate-800 rounded-lg shadow-xl max-w-lg w-full p-5 mx-4 border border-slate-200 dark:border-slate-700">
+            <h3 class="text-lg font-bold text-primary dark:text-blue-400 mb-3 flex items-center gap-2"><i class="fa-solid fa-magnifying-glass"></i> Tìm & Thay Thế Nhanh</h3>
+            
+            <div class="space-y-3 mb-4">
+                <div>
+                    <label class="block text-xs font-medium text-slate-500 uppercase mb-1">Chuỗi cần tìm (Hỗ trợ Regex)</label>
+                    <input type="text" id="find-val" value="email protected" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded px-3 py-1.5 text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-500 uppercase mb-1">Thay thế thành</label>
+                    <input type="text" id="replace-val" value="" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded px-3 py-1.5 text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none">
+                </div>
+                <div class="flex items-center gap-2 mt-2">
+                    <input type="checkbox" id="fr-is-regex" class="rounded border-slate-300 text-primary" checked>
+                    <label for="fr-is-regex" class="text-sm text-slate-600 dark:text-slate-300 cursor-pointer">Sử dụng Biểu thức chính quy (Regex)</label>
+                </div>
+            </div>
+            <div class="flex justify-end gap-2">
+                <button onclick="document.getElementById('find-replace-modal').classList.add('hidden')" class="bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-800 dark:text-white px-4 py-1.5 rounded text-sm font-medium">Đóng</button>
+                <button onclick="executeFindReplaceAll()" class="bg-primary hover:bg-primary-hover text-white px-4 py-1.5 rounded text-sm font-medium">Thay thế Toàn Bộ Truyện</button>
             </div>
         </div>
     </div>
@@ -398,11 +425,11 @@
             typeTimeout = setTimeout(() => { handleSaveCurrent(); }, 1500);
         });
 
-        // --- TẬP trung dọn sạch triệt để rác [email protected] / email protected / [email ---
+        // --- DỌN SẠCH TẬP TRUNG TRIỆT ĐỂ RÁC CHO TOÀN BỘ CHƯƠNG (Bao gồm Chương 0/1) ---
         function handleCleanAllChapters() {
             if(spine.length === 0) return showAlert("Chưa có chương nào được tải.");
             
-            showConfirm(`Bạn có chắc muốn quét và dọn sạch vĩnh viễn rác chứa "[email protected]" trong toàn bộ ${spine.length} chương (bao gồm cả Chương 1)?`, () => {
+            showConfirm(`Bạn có chắc muốn quét và dọn sạch vĩnh viễn rác chứa "[email protected]" trong toàn bộ ${spine.length} chương?`, () => {
                 showLoading(`Đang quét sạch rác toàn bộ truyện...`);
                 
                 handleSaveCurrent();
@@ -415,7 +442,7 @@
                     const parser = new DOMParser();
                     const doc = parser.parseFromString(htmlStr, 'text/html');
                     
-                    // 1. Quét sâu qua mọi thẻ có khả năng chứa rác
+                    // 1. Quét sâu qua mọi thẻ có khả năng chứa rác (bao gồm cả p, div, span, li, section, v.v.)
                     const elements = doc.querySelectorAll('p, div, span, li, b, i, em, strong, section, blockquote');
                     elements.forEach(el => {
                         const text = el.textContent || "";
@@ -441,9 +468,13 @@
 
                     let cleanBodyHtml = doc.body ? doc.body.innerHTML : htmlStr;
 
-                    // 3. Quét dự phòng bằng Regex DotAll để bắt trọn mọi cụm rác phức tạp nhiều dòng ở Chương 1
-                    const globalJunkRegex = /<p[^>]*>[\s\S]*?(email protected|\[email|如有惡意廣告)[\s\S]*?<\/p>/gis;
+                    // 3. Quét phủ đầu bằng Regex mạnh mẽ trên toàn bộ chuỗi HTML để bắt trọn rác ở chương 1 (chapter_0.xhtml)
+                    const globalJunkRegex = /<[^>]*?>[\s\S]*?(email protected|\[email|如有惡意廣告)[\s\S]*?<\/[^>]*?>/gis;
                     cleanBodyHtml = cleanBodyHtml.replace(globalJunkRegex, '');
+
+                    // Quét dự phòng dòng text thuần nếu không bọc thẻ
+                    const rawTextJunkRegex = /.*?(email protected|\[email|如有惡意廣告).*?/gis;
+                    cleanBodyHtml = cleanBodyHtml.replace(rawTextJunkRegex, '');
 
                     fileContents[id] = htmlStr.replace(/(<body[^>]*>)([\s\S]*?)(<\/body>)/i, function(match, p1, p2, p3) {
                         return p1 + cleanBodyHtml + p3;
@@ -455,8 +486,50 @@
                 }
 
                 hideLoading();
-                showAlert(`Đã dọn sạch rác thành công!\n- Tổng số chương quét: ${spine.length}\n- Đã xóa sạch: ${totalAdsRemoved} vị trí rác [email protected]\n- Đã dọn: ${totalTagsRemoved} thẻ rỗng.`);
+                showAlert(`Đã dọn sạch rác thành công!\n- Tổng số chương quét: ${spine.length}\n- Đã xóa sạch: ${totalAdsRemoved} vị trí rác\n- Đã dọn: ${totalTagsRemoved} thẻ rỗng.`);
             });
+        }
+
+        function openFindReplace() {
+            if(spine.length === 0) return showAlert("Vui lòng mở file truyện trước.");
+            document.getElementById('find-replace-modal').classList.remove('hidden');
+        }
+
+        function executeFindReplaceAll() {
+            const findStr = document.getElementById('find-val').value;
+            const replaceStr = document.getElementById('replace-val').value;
+            const isRegex = document.getElementById('fr-is-regex').checked;
+            
+            if(!findStr) return showAlert("Vui lòng nhập chuỗi cần tìm!");
+            
+            document.getElementById('find-replace-modal').classList.add('hidden');
+            showLoading(`Đang thay thế hàng loạt trên ${spine.length} chương...`);
+            
+            handleSaveCurrent();
+            let totalMatches = 0;
+
+            try {
+                let regex = isRegex ? new RegExp(findStr, 'g') : new RegExp(findStr.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g');
+                
+                spine.forEach(id => {
+                    let content = fileContents[id];
+                    const matches = content.match(regex);
+                    if (matches) {
+                        totalMatches += matches.length;
+                        fileContents[id] = content.replace(regex, replaceStr);
+                    }
+                });
+
+                if (currentActiveId) {
+                    openChapter(currentActiveId);
+                }
+
+                hideLoading();
+                showAlert(`Đã hoàn tất thay thế hàng loạt trên toàn bộ truyện!\n- Tổng số vị trí được thay thế: ${totalMatches}`);
+            } catch (err) {
+                hideLoading();
+                showAlert("Lỗi Regex: " + err.message);
+            }
         }
 
         function handleSplitChapter() {
