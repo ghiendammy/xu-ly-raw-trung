@@ -230,10 +230,10 @@
             localStorage.theme = htmlEl.classList.contains('dark') ? 'dark' : 'light';
         };
 
-        // --- Bộ nhớ Regex lưu sẵn (Cập nhật chuẩn xác từng từ khóa rác) ---
+        // --- Bộ nhớ Regex lưu sẵn (Đã tối ưu quét trọn 3 loại rác của bạn) ---
         const REGEX_PRESETS = {
             ads_zhihu: {
-                find: "(xbanxia|proton\\.me|Sponsored|You May Like|Techno Mag|Forex|Spread|chứng khoán|如有惡意廣告|請將截屏或錄屏發送至|撤消)",
+                find: "(如有惡意廣告|email\\s*protected|xbanxia|proton\\.me|Sponsored|You May Like|TradingView|Spread|đòn bẩy|chứng khoán|撤消)",
                 replace: "",
                 isRegex: true
             },
@@ -552,28 +552,27 @@
             typeTimeout = setTimeout(() => { handleSaveCurrent(); }, 1500);
         });
 
-        // --- Dọn rác TOÀN BỘ TRUYỆN (Đã sửa lỗi quét sạch mọi vị trí, kể cả chương 1 và không bị đơ máy) ---
+        // --- Dọn rác TOÀN BỘ TRUYỆN (Đã fix quét sạch 3 loại rác, bao gồm chương 1 và không bị bỏ sót) ---
         function handleCleanAllChapters() {
             if(spine.length === 0) return showAlert("Chưa có chương nào được tải.");
             
-            showConfirm(`Bạn có chắc muốn dọn rác TOÀN BỘ ${spine.length} chương?\nThao tác này sẽ dọn sạch quảng cáo, email rác và thông báo cáo cáo trên tất cả các chương (bao gồm cả chương 1)!`, () => {
+            showConfirm(`Bạn có chắc muốn dọn rác TOÀN BỘ ${spine.length} chương?\nThao tác này sẽ quét và xóa sạch 3 loại rác quảng cáo (bao gồm cả chương 1)!`, () => {
                 showLoading(`Đang quét và dọn rác ${spine.length} chương...`);
                 
-                // Đồng bộ nội dung chương đang mở trước khi quét toàn bộ
                 handleSaveCurrent();
 
                 let totalAdsRemoved = 0;
                 let totalTagsRemoved = 0;
 
-                // Sử dụng biểu thức quét linh hoạt (không bị kẹt ở đầu/cuối dòng)
-                const junkRegex = /(xbanxia|proton\.me|Sponsored|You May Like|Techno Mag|Forex|Spread|chứng khoán|如有惡意廣告|請將截屏或錄屏發送至|撤消)/i;
+                // Biểu thức chính quy gom toàn bộ các từ khóa đặc trưng của 3 loại rác
+                const junkRegex = /(如有惡意廣告|email\s*protected|xbanxia|proton\.me|Sponsored|You May Like|TradingView|Spread|đòn bẩy|chứng khoán|撤消)/i;
 
                 spine.forEach(id => {
                     let htmlStr = fileContents[id] || "";
                     const parser = new DOMParser();
                     const doc = parser.parseFromString(htmlStr, 'text/html');
                     
-                    // 1. Quét qua toàn bộ thẻ đoạn văn, div, span, list... để tìm và xóa
+                    // 1. Quét qua các thẻ đoạn văn, div, span, li... chứa rác để xóa
                     const elements = doc.querySelectorAll('p, div, span, li, b, i, em, strong');
                     elements.forEach(el => {
                         const text = el.textContent || "";
@@ -583,7 +582,7 @@
                         }
                     });
 
-                    // 2. Dọn sạch các thẻ rỗng hoặc style dư thừa
+                    // 2. Dọn sạch các thẻ rỗng hoặc style thừa
                     const allElements = doc.querySelectorAll('*');
                     allElements.forEach(el => {
                         if (el.hasAttribute('style')) el.removeAttribute('style');
@@ -599,12 +598,14 @@
 
                     let cleanBodyHtml = doc.body ? doc.body.innerHTML : htmlStr;
 
+                    // 3. Quét phủ đầu cấp độ chuỗi HTML để chắc chắn không bỏ sót dòng rác nào
+                    cleanBodyHtml = cleanBodyHtml.replace(/<p[^>]*>.*?(如有惡意廣告|email\s*protected|xbanxia|proton\.me|Sponsored|You May Like|TradingView|Spread|đòn bẩy|chứng khoán|撤消).*?<\/p>/gi, '');
+
                     fileContents[id] = htmlStr.replace(/(<body[^>]*>)([\s\S]*?)(<\/body>)/i, function(match, p1, p2, p3) {
                         return p1 + cleanBodyHtml + p3;
                     });
                 });
 
-                // Tải lại chương hiện tại để hiển thị ngay kết quả
                 if (currentActiveId) {
                     openChapter(currentActiveId);
                 }
