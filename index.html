@@ -72,7 +72,6 @@
                 <i class="fa-solid fa-sun hidden dark:block"></i>
             </button>
 
-            <!-- Nút Mở File chung cho cả EPUB và TXT -->
             <label class="cursor-pointer bg-slate-100 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 hover:bg-slate-200 dark:hover:bg-slate-600 text-sm font-medium py-1.5 px-3 rounded shadow-sm transition-colors flex items-center gap-2">
                 <i class="fa-solid fa-folder-open text-primary dark:text-blue-400"></i> Mở EPUB / TXT
                 <input type="file" id="file-input" accept=".epub,.txt" class="hidden">
@@ -82,7 +81,7 @@
 
     <main class="flex-1 flex overflow-hidden">
         
-        <!-- Cột Trái: Sidebar (Rộng 300px) -->
+        <!-- Cột Trái: Sidebar -->
         <aside class="w-[300px] bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 flex flex-col shrink-0">
             <div class="p-3 border-b border-slate-100 dark:border-slate-700/50">
                 <div class="flex justify-between items-center mb-2">
@@ -140,7 +139,7 @@
                 </div>
             </div>
 
-            <!-- Thanh Xuất File (Hỗ trợ cả Xuất EPUB và Xuất TXT) -->
+            <!-- Thanh Xuất File -->
             <div id="export-bar" class="h-14 bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 px-4 flex items-center justify-end gap-3 hidden">
                 <button onclick="handleExportTxt()" class="bg-slate-600 hover:bg-slate-700 text-white px-4 py-2 rounded shadow text-sm font-semibold flex items-center gap-2 transition-transform transform active:scale-95">
                     <i class="fa-solid fa-file-lines"></i> Xuất File TXT
@@ -193,7 +192,7 @@
                     <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Chọn công thức Regex thường dùng</label>
                     <select id="regex-preset-select" onchange="applyRegexPreset(this.value)" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded px-3 py-1.5 text-sm focus:border-primary outline-none">
                         <option value="">-- Chọn mẫu có sẵn hoặc tự nhập bên dưới --</option>
-                        <option value="ads_zhihu">Xóa dòng quảng cáo / Nhắc nhở quét mã (Zhihu/Web)</option>
+                        <option value="ads_zhihu">Xóa dòng xbanxia@proton.me / Quảng cáo rác</option>
                         <option value="clean_whitespace">Dọn khoảng trắng dư thừa đầu/cuối dòng</option>
                         <option value="tag_cleaner">Lọc bỏ thẻ span rác định dạng inline</option>
                         <option value="normalize_dots">Chuẩn hóa dấu chấm lửng (...)</option>
@@ -234,7 +233,7 @@
         // --- Bộ nhớ Regex lưu sẵn ---
         const REGEX_PRESETS = {
             ads_zhihu: {
-                find: "(如有惡意廣告|請將截屏或錄屏發送至|You May Like|本章完)[^<]*",
+                find: ".*(xbanxia@proton\\.me|Sponsored|You May Like|Techno Mag|Forex|Spread|chứng khoán|如有惡意廣告|請將截屏或錄屏發送至|撤消).*$",
                 replace: "",
                 isRegex: true
             },
@@ -264,7 +263,7 @@
         }
 
         // --- Trạng thái toàn cục ---
-        let fileType = "epub";          // "epub" hoặc "txt"
+        let fileType = "epub";          
         let epubZip = null;             
         let opfPath = "";               
         let opfDoc = null;              
@@ -298,7 +297,7 @@
         function hideConfirm() { document.getElementById('custom-confirm').classList.add('hidden'); confirmCb = null; }
         document.getElementById('confirm-yes-btn').onclick = () => { if(confirmCb) confirmCb(); hideConfirm(); };
 
-        // --- Xử lý Mở file (Hỗ trợ EPUB và TXT) ---
+        // --- Xử lý Mở file ---
         document.getElementById('file-input').addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (!file) return;
@@ -315,7 +314,6 @@
             }
         });
 
-        // 1. Logic đọc EPUB
         async function loadEpubFile(file) {
             showLoading(`Đang phân tích EPUB...`);
             epubZip = new JSZip();
@@ -377,7 +375,6 @@
             reader.readAsArrayBuffer(file);
         }
 
-        // 2. Logic đọc TXT (Tự động chia chương theo chuẩn Raw Tiếng Trung)
         function loadTxtFile(file) {
             showLoading("Đang đọc file TXT chuẩn UTF-8...");
             spine = []; manifest = {}; reverseManifest = {}; fileContents = {}; fileTitles = {}; currentActiveId = null;
@@ -387,14 +384,11 @@
             reader.onload = function(event) {
                 try {
                     const text = event.target.result;
-                    
-                    // Regex nhận diện tiêu đề chương tiếng Trung (Ví dụ: 第1章, 第百章, 第 一 千 章...)
                     const chapterRegex = /(第\s*[0-9一二三四五六七八九十百千万零]+\s*章[^\n]*)/g;
                     let parts = text.split(chapterRegex);
                     
                     let chapters = [];
                     if (parts.length > 1) {
-                        // Nếu tìm thấy các chương theo chuẩn
                         if (parts[0].trim()) {
                             chapters.push({ title: "Phần mở đầu / Giới thiệu", content: parts[0] });
                         }
@@ -404,7 +398,6 @@
                             chapters.push({ title: title, content: title + "\n" + content });
                         }
                     } else {
-                        // Nếu file không có định dạng chương rõ ràng, chia theo số dòng hoặc để nguyên
                         chapters.push({ title: "Toàn bộ nội dung TXT", content: text });
                     }
 
@@ -416,7 +409,6 @@
                         reverseManifest[href] = id;
                         spine.push(id);
                         
-                        // Chuyển đổi text thuần túy thành các thẻ <p> HTML để chỉnh sửa mượt mà
                         const formattedHtmlBody = chap.content
                             .split(/\r?\n/)
                             .map(line => line.trim() ? `<p>${escapeHtml(line)}</p>` : `<br/>`)
@@ -456,7 +448,6 @@
             return fallbackName;
         }
 
-        // --- Render Sidebar List ---
         function renderSpineList(filterText = "") {
             ui.list.innerHTML = '';
             ui.count.textContent = spine.length;
@@ -510,7 +501,6 @@
             });
         }
 
-        // --- Xử lý Editor Nội Dung ---
         function openChapter(id) {
             handleSaveCurrent();
 
@@ -522,7 +512,6 @@
             ui.editor.innerHTML = doc.body ? doc.body.innerHTML : htmlStr;
             
             ui.currentName.textContent = manifest[id];
-            
             renderSpineList(ui.searchInput.value);
             
             ui.welcome.classList.add('hidden');
@@ -548,18 +537,33 @@
             typeTimeout = setTimeout(() => { handleSaveCurrent(); }, 1500);
         });
 
-        // --- Dọn rác HTML ---
+        // --- 1-Click Dọn Rác HTML & Tự động quét dòng chứa xbanxia@proton.me hoặc Quảng cáo ---
         function handleCleanHtml() {
             if(!currentActiveId) return;
-            showConfirm("Bạn có chắc muốn dọn rác HTML? Thao tác này sẽ xóa quảng cáo raw thường gặp, xóa style nội tuyến và thẻ rỗng.", () => {
+            showConfirm("Bạn có chắc muốn thi triển Dọn rác HTML? Thao tác này sẽ tự động xóa sạch các dòng chứa email xbanxia@proton.me, quảng cáo (Sponsored, You May Like...) và các thẻ rỗng.", () => {
                 let html = ui.editor.innerHTML;
-                html = html.replace(/如有惡意廣告，請將截屏或錄屏發送至[^\s<]*/g, '');
-                html = html.replace(/You May Like[\s\S]*?Sponsored撤消/gis, '');
                 
-                ui.editor.innerHTML = html;
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                const paragraphs = doc.querySelectorAll('p, div, span, li');
                 
+                let removedAdCount = 0;
+                paragraphs.forEach(el => {
+                    const text = el.textContent || "";
+                    // Chỉ quét đúng email xbanxia@proton.me và các từ khóa quảng cáo đặc trưng
+                    if (
+                        text.includes('xbanxia@proton.me') || 
+                        /Sponsored|You May Like|Techno Mag|Forex|Spread|chứng khoán|如有惡意廣告|請將截屏或錄屏發送至|撤消/i.test(text)
+                    ) {
+                        el.remove();
+                        removedAdCount++;
+                    }
+                });
+                
+                ui.editor.innerHTML = doc.body ? doc.body.innerHTML : html;
+
                 const allElements = ui.editor.querySelectorAll('*');
-                let removedCount = 0;
+                let removedTagCount = 0;
                 
                 allElements.forEach(el => {
                     if (el.hasAttribute('style')) el.removeAttribute('style');
@@ -568,19 +572,19 @@
                         const hasImg = el.querySelector('img') !== null;
                         if (txt === '' && !hasImg) {
                             el.remove();
-                            removedCount++;
+                            removedTagCount++;
                         }
                     }
                 });
                 
                 handleSaveCurrent();
-                showAlert(`Dọn rác hoàn tất! Đã loại bỏ rác quảng cáo và ${removedCount} thẻ rỗng.`);
+                showAlert(`Dọn rác hoàn tất!\n- Đã xóa ${removedAdCount} dòng quảng cáo/email rác.\n- Đã loại bỏ ${removedTagCount} thẻ HTML rỗng.`);
             });
         }
 
-        // --- Tìm và Thay Thế ---
         function openFindReplace() {
             if(!currentActiveId) return;
+            document.getElementById('find-replace-modal').classList.add('hidden'); // Reset trước
             document.getElementById('find-replace-modal').classList.remove('hidden');
         }
 
@@ -610,7 +614,6 @@
             }
         }
 
-        // --- Tách / Gộp Chương ---
         function handleSplitChapter() {
             if(!currentActiveId) return;
             const sel = window.getSelection();
@@ -702,7 +705,6 @@
             });
         }
 
-        // --- Xuất file TXT ---
         function handleExportTxt() {
             handleSaveCurrent();
             let fullText = "";
@@ -720,14 +722,11 @@
             saveAs(blob, "truyen_da_xu_ly.txt");
         }
 
-        // --- Xuất file EPUB ---
         async function handleExportEpub() {
             handleSaveCurrent();
             
-            // Nếu người dùng mở file TXT ban đầu mà muốn xuất ra EPUB, tạo cấu trúc EPUB cơ bản
             if (fileType === "txt" || !epubZip || !opfDoc) {
                 showAlert("Đang khởi tạo gói EPUB mới từ các chương TXT...");
-                // Tạo một file EPUB cơ bản chuẩn qua JSZip
                 return exportNewEpubFromTxt();
             }
 
