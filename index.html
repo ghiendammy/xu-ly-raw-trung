@@ -230,7 +230,7 @@
             localStorage.theme = htmlEl.classList.contains('dark') ? 'dark' : 'light';
         };
 
-        // --- Bộ nhớ Regex lưu sẵn ---
+        // --- Bộ nhớ Regex lưu sẵn (Cập nhật riêng biệt từng loại rác) ---
         const REGEX_PRESETS = {
             ads_zhihu: {
                 find: ".*(xbanxia|proton\\.me|Sponsored|You May Like|Techno Mag|Forex|Spread|chứng khoán|如有惡意廣告|請將截屏或錄屏發送至|撤消).*$",
@@ -537,11 +537,11 @@
             typeTimeout = setTimeout(() => { handleSaveCurrent(); }, 1500);
         });
 
-        // --- Dọn rác HTML TOÀN BỘ TRUYỆN (Hàng loạt) ---
+        // --- Dọn rác HTML TOÀN BỘ TRUYỆN (Hàng loạt - Tách biệt quét cụ thể từng loại rác) ---
         function handleCleanAllChapters() {
             if(spine.length === 0) return showAlert("Chưa có chương nào được tải.");
             
-            showConfirm(`Bạn có chắc muốn dọn rác TOÀN BỘ ${spine.length} chương?\nThao tác này sẽ quét và xóa sạch quảng cáo, email rác (xbanxia, [email protected]) và thẻ rỗng trên tất cả các chương cùng một lúc!`, () => {
+            showConfirm(`Bạn có chắc muốn dọn rác TOÀN BỘ ${spine.length} chương?\nThao tác này sẽ quét sạch các dòng rác (xbanxia, thông báo bản quyền, rác quảng cáo kiểu You May Like/Sponsored...) và thẻ rỗng trên tất cả các chương cùng lúc!`, () => {
                 showLoading(`Đang quét và dọn rác ${spine.length} chương...`);
                 
                 handleSaveCurrent();
@@ -554,21 +554,30 @@
                     const parser = new DOMParser();
                     const doc = parser.parseFromString(htmlStr, 'text/html');
                     
-                    // 1. Quét xóa dòng rác/email/quảng cáo
-                    const paragraphs = doc.querySelectorAll('p, div, span, li');
-                    paragraphs.forEach(el => {
+                    // Quét toàn bộ thẻ khối hoặc đoạn văn để lọc chính xác rác nằm ở giữa hoặc cuối
+                    const elements = doc.querySelectorAll('p, div, span, li, b, i');
+                    elements.forEach(el => {
                         const text = el.textContent || "";
+                        
+                        // Kiểm tra nếu đoạn text chứa rác loại 1 (Email / Cảnh báo bản quyền)
+                        // Hoặc chứa rác loại 2 (Quảng cáo tiếng Anh dài kiểu You May Like / Sponsored / Techno Mag)
                         if (
                             text.includes('xbanxia') || 
-                            text.includes('[email protected]') ||
-                            /Sponsored|You May Like|Techno Mag|Forex|Spread|chứng khoán|如有惡意廣告|請將截屏或錄屏發送至|撤消/i.test(text)
+                            text.includes('proton.me') ||
+                            text.includes('如有惡意廣告') ||
+                            text.includes('請將截屏或錄屏發送至') ||
+                            text.includes('Sponsored') ||
+                            text.includes('You May Like') ||
+                            text.includes('Techno Mag') ||
+                            text.includes('Forex') ||
+                            text.includes('Spread')
                         ) {
                             el.remove();
                             totalAdsRemoved++;
                         }
                     });
 
-                    // 2. Dọn style nội tuyến và thẻ rỗng
+                    // Dọn style nội tuyến và thẻ rỗng thông thường
                     const allElements = doc.querySelectorAll('*');
                     allElements.forEach(el => {
                         if (el.hasAttribute('style')) el.removeAttribute('style');
@@ -582,7 +591,6 @@
                         }
                     });
 
-                    // Cập nhật lại fileContents của chương đó
                     fileContents[id] = htmlStr.replace(/(<body[^>]*>)([\s\S]*?)(<\/body>)/i, function(match, p1, p2, p3) {
                         return p1 + (doc.body ? doc.body.innerHTML : '') + p3;
                     });
@@ -593,7 +601,7 @@
                 }
 
                 hideLoading();
-                showAlert(`Dọn rác toàn bộ truyện thành công!\n- Đã quét qua: ${spine.length} chương\n- Đã xóa: ${totalAdsRemoved} dòng rác/quảng cáo\n- Đã dọn: ${totalTagsRemoved} thẻ rỗng.`);
+                showAlert(`Dọn rác toàn bộ truyện thành công!\n- Đã quét qua: ${spine.length} chương\n- Đã xóa: ${totalAdsRemoved} vị trí chứa rác / quảng cáo\n- Đã dọn: ${totalTagsRemoved} thẻ rỗng.`);
             });
         }
 
@@ -603,7 +611,6 @@
             document.getElementById('find-replace-modal').classList.remove('hidden');
         }
 
-        // --- Tìm & Thay thế Hàng Loạt Toàn Bộ Truyện ---
         function executeFindReplaceAll() {
             const findStr = document.getElementById('find-val').value;
             const replaceStr = document.getElementById('replace-val').value;
