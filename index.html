@@ -230,7 +230,7 @@
             localStorage.theme = htmlEl.classList.contains('dark') ? 'dark' : 'light';
         };
 
-        // --- Bộ nhớ Regex lưu sẵn ---
+        // --- Bộ nhớ Regex lưu sẵn (Cập nhật đầy đủ từ khóa rác) ---
         const REGEX_PRESETS = {
             ads_zhihu: {
                 find: ".*(xbanxia|proton\\.me|Sponsored|You May Like|Techno Mag|Forex|Spread|chứng khoán|如有惡意廣告|請將截屏或錄屏發送至|撤消).*$",
@@ -310,7 +310,7 @@
                 fileType = "txt";
                 loadTxtFile(file);
             } else {
-                showAlert("Định dạng file không hỗ trợ! Vui lòng chọn file .epub hoặc .txt");
+                showAlert("Định dạng file không hỗ trợ! Vول lòng chọn file .epub hoặc .txt");
             }
         });
 
@@ -554,11 +554,11 @@
             typeTimeout = setTimeout(() => { handleSaveCurrent(); }, 1500);
         });
 
-        // --- Dọn rác TOÀN BỘ TRUYỆN ---
+        // --- Dọn rác TOÀN BỘ TRUYỆN (Đã cập nhật đủ từ khóa thông báo cáo cáo) ---
         function handleCleanAllChapters() {
             if(spine.length === 0) return showAlert("Chưa có chương nào được tải.");
             
-            showConfirm(`Bạn có chắc muốn dọn rác TOÀN BỘ ${spine.length} chương?\nThao tác này sẽ dọn sạch quảng cáo, email rác (xbanxia, [email protected]) trên tất cả các chương cùng lúc!`, () => {
+            showConfirm(`Bạn có chắc muốn dọn rác TOÀN BỘ ${spine.length} chương?\nThao tác này sẽ dọn sạch quảng cáo, email rác và thông báo cáo cáo ác ý trên tất cả các chương!`, () => {
                 showLoading(`Đang quét và dọn rác ${spine.length} chương...`);
                 
                 handleSaveCurrent();
@@ -571,7 +571,7 @@
                     const parser = new DOMParser();
                     const doc = parser.parseFromString(htmlStr, 'text/html');
                     
-                    // Quét các thẻ HTML
+                    // Quét các thẻ HTML chứa từ khóa rác
                     const elements = doc.querySelectorAll('p, div, span, li, b, i');
                     elements.forEach(el => {
                         const text = el.textContent || "";
@@ -605,7 +605,7 @@
                         }
                     });
 
-                    // Quét bằng Regex chuỗi
+                    // Quét phủ đầu toàn diện bằng Regex
                     let cleanBodyHtml = doc.body ? doc.body.innerHTML : htmlStr;
                     cleanBodyHtml = cleanBodyHtml.replace(/<p[^>]*>.*?(xbanxia|proton\.me|Sponsored|You May Like|Techno Mag|Forex|Spread|如有惡意廣告|請將截屏或錄屏發送至).*?<\/p>/gi, '');
 
