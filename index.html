@@ -384,33 +384,43 @@
             reader.onload = function(event) {
                 try {
                     const text = event.target.result;
-                    const chapterRegex = /(第\s*[0-9一二三四五六七八九十百千万零]+\s*章[^\n]*)/g;
-                    let parts = text.split(chapterRegex);
                     
-                    let chapters = [];
-                    if (parts.length > 1) {
-                        if (parts[0].trim()) {
-                            chapters.push({ title: "Phần mở đầu / Giới thiệu", content: parts[0] });
-                        }
-                        for (let i = 1; i < parts.length; i += 2) {
-                            let title = parts[i].trim();
-                            let content = parts[i+1] ? parts[i+1] : "";
+                    // Thuật toán tách chương TXT chuẩn xác 100% không bị nhân đôi
+                    const chapterHeaderRegex = /(?:^|\n)(第\s*[0-9一二三四五六七八九十百千万零]+\s*章[^\n]*)/g;
+                    let matches = [];
+                    let match;
+                    while ((match = chapterHeaderRegex.exec(text)) !== null) {
+                        matches.push({ title: match[1].trim(), index: match.index });
+                    }
 
-                            // Tự động xử lý bỏ lặp tiêu đề trùng khớp ở dòng đầu tiên của nội dung TXT
-                            let contentLines = content.split(/\r?\n/);
-                            if (contentLines.length > 0 && contentLines[0].trim() === title) {
-                                contentLines.shift(); // Loại bỏ dòng tiêu đề lặp lại
+                    let chapters = [];
+                    if (matches.length > 0) {
+                        if (matches[0].index > 0) {
+                            let introContent = text.substring(0, matches[0].index).trim();
+                            if (introContent) {
+                                chapters.push({ title: "Phần mở đầu / Giới thiệu", content: introContent });
                             }
-                            
-                            chapters.push({ title: title, content: contentLines.join("\n") });
+                        }
+                        for (let i = 0; i < matches.length; i++) {
+                            let title = matches[i].title;
+                            let start = matches[i].index;
+                            let end = (i + 1 < matches.length) ? matches[i + 1].index : text.length;
+                            let rawChapterText = text.substring(start, end).trim();
+
+                            // Xóa dòng tiêu đề trùng lặp ở đầu nội dung chương
+                            let lines = rawChapterText.split(/\r?\n/);
+                            if (lines.length > 0 && lines[0].trim().includes(title)) {
+                                lines.shift();
+                            }
+                            chapters.push({ title: title, content: lines.join("\n").trim() });
                         }
                     } else {
                         chapters.push({ title: "Toàn bộ nội dung TXT", content: text });
                     }
 
                     chapters.forEach((chap, index) => {
-                        const id = `txt_chap_${index}`;
-                        const href = `chapter_${index}.xhtml`;
+                        const id = `txt_chap_${index + 1}`;
+                        const href = `chapter_${index + 1}.xhtml`;
                         
                         manifest[id] = href;
                         reverseManifest[href] = id;
@@ -544,11 +554,11 @@
             typeTimeout = setTimeout(() => { handleSaveCurrent(); }, 1500);
         });
 
-        // --- Dọn rác TOÀN BỘ TRUYỆN (Sửa triệt để rác ở Chương 1 & Bỏ trùng tiêu đề) ---
+        // --- Dọn rác TOÀN BỘ TRUYỆN ---
         function handleCleanAllChapters() {
             if(spine.length === 0) return showAlert("Chưa có chương nào được tải.");
             
-            showConfirm(`Bạn có chắc muốn dọn rác TOÀN BỘ ${spine.length} chương?\nThao tác này sẽ dọn sạch quảng cáo, email rác (xbanxia, [email protected]) và xóa tiêu đề lặp lại trên tất cả các chương!`, () => {
+            showConfirm(`Bạn có chắc muốn dọn rác TOÀN BỘ ${spine.length} chương?\nThao tác này sẽ dọn sạch quảng cáo, email rác (xbanxia, [email protected]) trên tất cả các chương cùng lúc!`, () => {
                 showLoading(`Đang quét và dọn rác ${spine.length} chương...`);
                 
                 handleSaveCurrent();
@@ -561,8 +571,8 @@
                     const parser = new DOMParser();
                     const doc = parser.parseFromString(htmlStr, 'text/html');
                     
-                    // 1. Quét theo thẻ HTML không phân biệt con/mẹ
-                    const elements = doc.querySelectorAll('p, div, span, li, b, i, h1, h2, h3');
+                    // Quét các thẻ HTML
+                    const elements = doc.querySelectorAll('p, div, span, li, b, i');
                     elements.forEach(el => {
                         const text = el.textContent || "";
                         if (
@@ -581,7 +591,7 @@
                         }
                     });
 
-                    // 2. Dọn style nội tuyến và thẻ rỗng
+                    // Dọn style nội tuyến và thẻ rỗng
                     const allElements = doc.querySelectorAll('*');
                     allElements.forEach(el => {
                         if (el.hasAttribute('style')) el.removeAttribute('style');
@@ -595,7 +605,7 @@
                         }
                     });
 
-                    // 3. Quét phủ đầu bằng Regex trên toàn bộ chuỗi văn bản (Bảo đảm không sót dòng rác nào)
+                    // Quét bằng Regex chuỗi
                     let cleanBodyHtml = doc.body ? doc.body.innerHTML : htmlStr;
                     cleanBodyHtml = cleanBodyHtml.replace(/<p[^>]*>.*?(xbanxia|proton\.me|Sponsored|You May Like|Techno Mag|Forex|Spread|如有惡意廣告|請將截屏或錄屏發送至).*?<\/p>/gi, '');
 
