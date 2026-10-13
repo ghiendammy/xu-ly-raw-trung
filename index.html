@@ -248,7 +248,12 @@
         let confirmCb = null;
         function showConfirm(msg, cb) { document.getElementById('confirm-message').textContent = msg; confirmCb = cb; document.getElementById('custom-confirm').classList.remove('hidden'); }
         function hideConfirm() { document.getElementById('custom-confirm').classList.add('hidden'); confirmCb = null; }
-        document.getElementById('confirm-yes-btn').onclick = () => { if(confirmCb) confirmCb(); hideConfirm(); };
+        
+        // Đã gắn lại sự kiện cho nút Đồng ý
+        document.getElementById('confirm-yes-btn').onclick = () => { 
+            if(confirmCb) confirmCb(); 
+            hideConfirm(); 
+        };
 
         // --- Xử lý Mở file EPUB ---
         document.getElementById('file-input').addEventListener('change', function(e) {
@@ -442,7 +447,7 @@
                     const parser = new DOMParser();
                     const doc = parser.parseFromString(htmlStr, 'text/html');
                     
-                    // 1. Quét sâu qua mọi thẻ có khả năng chứa rác (bao gồm cả p, div, span, li, section, v.v.)
+                    // 1. Quét sâu qua mọi thẻ có khả năng chứa rác
                     const elements = doc.querySelectorAll('p, div, span, li, b, i, em, strong, section, blockquote');
                     elements.forEach(el => {
                         const text = el.textContent || "";
@@ -468,11 +473,10 @@
 
                     let cleanBodyHtml = doc.body ? doc.body.innerHTML : htmlStr;
 
-                    // 3. Quét phủ đầu bằng Regex mạnh mẽ trên toàn bộ chuỗi HTML để bắt trọn rác ở chương 1 (chapter_0.xhtml)
+                    // 3. Quét phủ đầu bằng Regex mạnh mẽ trên toàn bộ chuỗi HTML để bắt trọn rác ở chương 0/1
                     const globalJunkRegex = /<[^>]*?>[\s\S]*?(email protected|\[email|如有惡意廣告)[\s\S]*?<\/[^>]*?>/gis;
                     cleanBodyHtml = cleanBodyHtml.replace(globalJunkRegex, '');
 
-                    // Quét dự phòng dòng text thuần nếu không bọc thẻ
                     const rawTextJunkRegex = /.*?(email protected|\[email|如有惡意廣告).*?/gis;
                     cleanBodyHtml = cleanBodyHtml.replace(rawTextJunkRegex, '');
 
