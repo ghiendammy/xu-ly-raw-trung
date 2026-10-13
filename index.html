@@ -98,7 +98,7 @@
                 <ul id="spine-list" class="space-y-1">
                     <div class="h-full flex flex-col items-center justify-center text-slate-400 p-6 text-center space-y-3 mt-10">
                         <i class="fa-solid fa-box-open text-4xl opacity-50"></i>
-                        <p class="text-sm">Chưa tải file truyện (.epub atau .txt).</p>
+                        <p class="text-sm">Chưa tải file truyện (.epub hoặc .txt).</p>
                     </div>
                 </ul>
             </div>
@@ -192,7 +192,7 @@
                     <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Chọn công thức Regex thường dùng</label>
                     <select id="regex-preset-select" onchange="applyRegexPreset(this.value)" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded px-3 py-1.5 text-sm focus:border-primary outline-none">
                         <option value="">-- Chọn mẫu có sẵn hoặc tự nhập bên dưới --</option>
-                        <option value="ads_zhihu">Xóa dòng xbanxia@proton.me / Quảng cáo rác</option>
+                        <option value="ads_zhihu">Xóa dòng rác / Quảng cáo / Thông báo bản quyền</option>
                         <option value="clean_whitespace">Dọn khoảng trắng dư thừa đầu/cuối dòng</option>
                         <option value="tag_cleaner">Lọc bỏ thẻ span rác định dạng inline</option>
                         <option value="normalize_dots">Chuẩn hóa dấu chấm lửng (...)</option>
@@ -233,7 +233,7 @@
         // --- Bộ nhớ Regex lưu sẵn ---
         const REGEX_PRESETS = {
             ads_zhihu: {
-                find: ".*(xbanxia@proton\\.me|Sponsored|You May Like|Techno Mag|Forex|Spread|chứng khoán|如有惡意廣告|請將截屏或錄屏發送至|撤消).*$",
+                find: ".*(xbanxia|proton\\.me|Sponsored|You May Like|Techno Mag|Forex|Spread|chứng khoán|如有惡意廣告|請將截屏或錄屏發送至|撤消).*$",
                 replace: "",
                 isRegex: true
             },
@@ -541,10 +541,9 @@
         function handleCleanAllChapters() {
             if(spine.length === 0) return showAlert("Chưa có chương nào được tải.");
             
-            showConfirm(`Bạn có chắc muốn dọn rác TOÀN BỘ ${spine.length} chương?\nThao tác này sẽ quét và xóa sạch quảng cáo, email xbanxia và thẻ rỗng trên tất cả các chương cùng một lúc!`, () => {
+            showConfirm(`Bạn có chắc muốn dọn rác TOÀN BỘ ${spine.length} chương?\nThao tác này sẽ quét và xóa sạch quảng cáo, email rác (xbanxia, [email protected]) và thẻ rỗng trên tất cả các chương cùng một lúc!`, () => {
                 showLoading(`Đang quét và dọn rác ${spine.length} chương...`);
                 
-                // Lưu lại chương đang mở trước nếu có
                 handleSaveCurrent();
 
                 let totalAdsRemoved = 0;
@@ -560,7 +559,8 @@
                     paragraphs.forEach(el => {
                         const text = el.textContent || "";
                         if (
-                            text.includes('xbanxia@proton.me') || 
+                            text.includes('xbanxia') || 
+                            text.includes('[email protected]') ||
                             /Sponsored|You May Like|Techno Mag|Forex|Spread|chứng khoán|如有惡意廣告|請將截屏或錄屏發送至|撤消/i.test(text)
                         ) {
                             el.remove();
@@ -583,13 +583,11 @@
                     });
 
                     // Cập nhật lại fileContents của chương đó
-                    const serializer = new XMLSerializer();
                     fileContents[id] = htmlStr.replace(/(<body[^>]*>)([\s\S]*?)(<\/body>)/i, function(match, p1, p2, p3) {
                         return p1 + (doc.body ? doc.body.innerHTML : '') + p3;
                     });
                 });
 
-                // Nếu đang mở 1 chương thì load lại giao diện chương đó
                 if (currentActiveId) {
                     openChapter(currentActiveId);
                 }
@@ -812,7 +810,7 @@
         }
 
         async function exportNewEpubFromTxt() {
-            showLoading("Đang tạo file EPUB chuẩn từ TXT kỹ thuật...");
+            showLoading("Đang tạo file EPUB chuẩn từ TXT...");
             try {
                 const zip = new JSZip();
                 zip.file("mimetype", "application/epub+zip", {compression: "STORE"});
