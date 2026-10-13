@@ -114,7 +114,7 @@
                     
                     <div class="w-px h-5 bg-slate-200 dark:bg-slate-600 mx-1"></div>
                     
-                    <button onclick="handleCleanAllChapters()" class="px-3 py-1.5 rounded bg-purple-50 text-purple-600 hover:bg-purple-100 dark:bg-purple-500/10 dark:text-purple-400 dark:hover:bg-purple-500/20 text-sm font-medium transition-colors shadow-sm" title="Xóa sạch hoàn toàn câu rác trên toàn truyện"><i class="fa-solid fa-broom mr-1.5"></i> Dọn Sạch Rác Toàn Truyện</button>
+                    <button onclick="handleCleanAllChapters()" class="px-3 py-1.5 rounded bg-purple-50 text-purple-600 hover:bg-purple-100 dark:bg-purple-500/10 dark:text-purple-400 dark:hover:bg-purple-500/20 text-sm font-medium transition-colors shadow-sm" title="Dọn sạch dòng quảng cáo toàn truyện"><i class="fa-solid fa-broom mr-1.5"></i> Dọn Sạch Rác Toàn Truyện</button>
                     <button onclick="openFindReplace()" class="px-2.5 py-1.5 rounded hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-sm font-medium transition-colors"><i class="fa-solid fa-magnifying-glass mr-1"></i> Regex & Tìm kiếm</button>
                     
                     <div class="w-px h-5 bg-slate-200 dark:bg-slate-600 mx-1"></div>
@@ -416,11 +416,16 @@
             const newBody = ui.editor.innerHTML;
             const oldHtml = fileContents[currentActiveId];
             
-            const updatedHtml = oldHtml.replace(/(<body[^>]*>)([\s\S]*?)(<\/body>)/i, function(match, p1, p2, p3) {
-                return p1 + newBody + p3;
-            });
+            // Dùng cờ 'gis' để đảm bảo khớp đúng thẻ body ở mọi chương, kể cả chapter_0.xhtml xuống dòng
+            const bodyRegex = /(<body[^>]*>)([\s\S]*?)(<\/body>)/gis;
             
-            fileContents[currentActiveId] = updatedHtml;
+            if (bodyRegex.test(oldHtml)) {
+                fileContents[currentActiveId] = oldHtml.replace(bodyRegex, function(match, p1, p2, p3) {
+                    return p1 + newBody + p3;
+                });
+            } else {
+                fileContents[currentActiveId] = `<body>${newBody}</body>`;
+            }
         }
 
         let typeTimeout;
@@ -429,56 +434,44 @@
             typeTimeout = setTimeout(() => { handleSaveCurrent(); }, 1500);
         });
 
-        // --- DỌN SẠCH TẬP TRUNG TRIỆT ĐỂ CÂU RÁC TIẾNG TRUNG & EMAIL ---
+        // --- DỌN SẠCH CHỈ ĐÚNG DÒNG QUẢNG CÁO (AN TOÀN TUYỆT ĐỐI KHÔNG XÓA NHẦM NỘI DUNG) ---
         function handleCleanAllChapters() {
             if(spine.length === 0) return showAlert("Chưa có chương nào được tải.");
             
-            showConfirm(`Bạn có chắc muốn quét và dọn sạch vĩnh viễn câu rác chứa "如有惡意廣告" trong toàn bộ ${spine.length} chương?`, () => {
-                showLoading(`Đang quét sạch rác toàn bộ truyện...`);
+            showConfirm(`Bạn có chắc muốn quét và dọn sạch dòng quảng cáo "如有惡意廣告" trong toàn bộ ${spine.length} chương?`, () => {
+                showLoading(`Đang dọn sạch quảng cáo toàn truyện...`);
                 
                 handleSaveCurrent();
 
                 let totalAdsRemoved = 0;
-                let totalTagsRemoved = 0;
 
                 spine.forEach(id => {
                     let htmlStr = fileContents[id] || "";
                     const parser = new DOMParser();
                     const doc = parser.parseFromString(htmlStr, 'text/html');
                     
-                    // 1. Quét qua DOM các thẻ chứa từ khóa đặc trưng của câu rác này
+                    // Duyệt qua các thẻ cấp nhỏ (p, div, span, li, b, i, em, strong...) để tìm chính xác dòng chứa quảng cáo
                     const elements = doc.querySelectorAll('p, div, span, li, b, i, em, strong, section, blockquote');
                     elements.forEach(el => {
                         const text = el.textContent || "";
+                        // Chỉ xóa thẻ chứa đúng dòng rác mà không ảnh hưởng gì tới các thẻ chứa nội dung khác
                         if (text.includes("如有惡意廣告") || text.includes("截屏") || text.includes("發送至") || text.toLowerCase().includes("email protected")) {
                             el.remove();
                             totalAdsRemoved++;
                         }
                     });
 
-                    // 2. Dọn dẹp các thẻ rỗng
-                    const allElements = doc.querySelectorAll('*');
-                    allElements.forEach(el => {
-                        if (el.hasAttribute('style')) el.removeAttribute('style');
-                        if (el.tagName.match(/^(SPAN|DIV|P|A|B|I|U|SECTION)$/i)) {
-                            const txt = el.textContent.trim();
-                            const hasImg = el.querySelector('img') !== null;
-                            if (txt === '' && !hasImg) {
-                                el.remove();
-                                totalTagsRemoved++;
-                            }
-                        }
-                    });
-
                     let cleanBodyHtml = doc.body ? doc.body.innerHTML : htmlStr;
 
-                    // 3. Quét phủ đầu bằng Regex bắt trọn câu rác dù bị ngắt thẻ hay nằm bất cứ đâu
-                    cleanBodyHtml = cleanBodyHtml.replace(/<[^>]*?>[\s\S]*?(如有惡意廣告|截屏|發送至|email)[\s\S]*?<\/[^>]*?>/gis, '');
-                    cleanBodyHtml = cleanBodyHtml.replace(/.*?(如有惡意廣告|截屏|發送至|email).*/gis, '');
-
-                    fileContents[id] = htmlStr.replace(/(<body[^>]*>)([\s\S]*?)(<\/body>)/i, function(match, p1, p2, p3) {
-                        return p1 + cleanBodyHtml + p3;
-                    });
+                    // Cập nhật lại nội dung vào file với regex body hỗ trợ đa dòng (dotAll)
+                    const bodyRegex = /(<body[^>]*>)([\s\S]*?)(<\/body>)/gis;
+                    if (bodyRegex.test(htmlStr)) {
+                        fileContents[id] = htmlStr.replace(bodyRegex, function(match, p1, p2, p3) {
+                            return p1 + cleanBodyHtml + p3;
+                        });
+                    } else {
+                        fileContents[id] = `<body>${cleanBodyHtml}</body>`;
+                    }
                 });
 
                 if (currentActiveId) {
@@ -486,7 +479,7 @@
                 }
 
                 hideLoading();
-                showAlert(`Đã dọn sạch rác thành công!\n- Tổng số chương quét: ${spine.length}\n- Đã xóa sạch: ${totalAdsRemoved} vị trí rác\n- Đã dọn: ${totalTagsRemoved} thẻ rỗng.`);
+                showAlert(`Đã dọn sạch quảng cáo thành công!\n- Tổng số chương quét: ${spine.length}\n- Đã xóa chính xác: ${totalAdsRemoved} dòng quảng cáo.`);
             });
         }
 
@@ -509,11 +502,6 @@
             let totalMatches = 0;
 
             try {
-                // Tự động mở rộng regex nếu tìm câu rác tiếng Trung
-                if (findStr.includes("如有惡意廣告")) {
-                    findStr = ".*?(如有惡意廣告|截屏|發送至|email).*?";
-                }
-
                 let regex = isRegex ? new RegExp(findStr, 'gi') : new RegExp(findStr.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
                 
                 spine.forEach(id => {
@@ -560,7 +548,7 @@
                 const newHref = `chapter_${timestamp}.xhtml`;
                 
                 const baseHtml = fileContents[currentActiveId];
-                const part2Html = baseHtml.replace(/(<body[^>]*>)([\s\S]*?)(<\/body>)/i, '$1' + parts[1] + '$3');
+                const part2Html = baseHtml.replace(/(<body[^>]*>)([\s\S]*?)(<\/body>)/gis, '$1' + parts[1] + '$3');
                 
                 manifest[newId] = newHref;
                 reverseManifest[newHref] = newId;
