@@ -114,7 +114,7 @@
                     
                     <div class="w-px h-5 bg-slate-200 dark:bg-slate-600 mx-1"></div>
                     
-                    <button onclick="handleCleanAllChapters()" class="px-3 py-1.5 rounded bg-purple-50 text-purple-600 hover:bg-purple-100 dark:bg-purple-500/10 dark:text-purple-400 dark:hover:bg-purple-500/20 text-sm font-medium transition-colors shadow-sm" title="Xóa sạch toàn bộ rác [email protected] trên toàn truyện"><i class="fa-solid fa-broom mr-1.5"></i> Dọn Sạch Rác Toàn Truyện</button>
+                    <button onclick="handleCleanAllChapters()" class="px-3 py-1.5 rounded bg-purple-50 text-purple-600 hover:bg-purple-100 dark:bg-purple-500/10 dark:text-purple-400 dark:hover:bg-purple-500/20 text-sm font-medium transition-colors shadow-sm" title="Xóa sạch hoàn toàn câu rác trên toàn truyện"><i class="fa-solid fa-broom mr-1.5"></i> Dọn Sạch Rác Toàn Truyện</button>
                     <button onclick="openFindReplace()" class="px-2.5 py-1.5 rounded hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-sm font-medium transition-colors"><i class="fa-solid fa-magnifying-glass mr-1"></i> Regex & Tìm kiếm</button>
                     
                     <div class="w-px h-5 bg-slate-200 dark:bg-slate-600 mx-1"></div>
@@ -187,7 +187,7 @@
             <div class="space-y-3 mb-4">
                 <div>
                     <label class="block text-xs font-medium text-slate-500 uppercase mb-1">Chuỗi cần tìm (Hỗ trợ Regex)</label>
-                    <input type="text" id="find-val" value="email protected" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded px-3 py-1.5 text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none">
+                    <input type="text" id="find-val" value="如有惡意廣告" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded px-3 py-1.5 text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none">
                 </div>
                 <div>
                     <label class="block text-xs font-medium text-slate-500 uppercase mb-1">Thay thế thành</label>
@@ -249,7 +249,6 @@
         function showConfirm(msg, cb) { document.getElementById('confirm-message').textContent = msg; confirmCb = cb; document.getElementById('custom-confirm').classList.remove('hidden'); }
         function hideConfirm() { document.getElementById('custom-confirm').classList.add('hidden'); confirmCb = null; }
         
-        // Đã gắn lại sự kiện cho nút Đồng ý
         document.getElementById('confirm-yes-btn').onclick = () => { 
             if(confirmCb) confirmCb(); 
             hideConfirm(); 
@@ -430,11 +429,11 @@
             typeTimeout = setTimeout(() => { handleSaveCurrent(); }, 1500);
         });
 
-        // --- DỌN SẠCH TẬP TRUNG TRIỆT ĐỂ RÁC CHO TOÀN BỘ CHƯƠNG (Bao gồm Chương 0/1) ---
+        // --- DỌN SẠCH TẬP TRUNG TRIỆT ĐỂ CÂU RÁC TIẾNG TRUNG & EMAIL ---
         function handleCleanAllChapters() {
             if(spine.length === 0) return showAlert("Chưa có chương nào được tải.");
             
-            showConfirm(`Bạn có chắc muốn quét và dọn sạch vĩnh viễn rác chứa "[email protected]" trong toàn bộ ${spine.length} chương?`, () => {
+            showConfirm(`Bạn có chắc muốn quét và dọn sạch vĩnh viễn câu rác chứa "如有惡意廣告" trong toàn bộ ${spine.length} chương?`, () => {
                 showLoading(`Đang quét sạch rác toàn bộ truyện...`);
                 
                 handleSaveCurrent();
@@ -447,17 +446,17 @@
                     const parser = new DOMParser();
                     const doc = parser.parseFromString(htmlStr, 'text/html');
                     
-                    // 1. Quét sâu qua mọi thẻ có khả năng chứa rác
+                    // 1. Quét qua DOM các thẻ chứa từ khóa đặc trưng của câu rác này
                     const elements = doc.querySelectorAll('p, div, span, li, b, i, em, strong, section, blockquote');
                     elements.forEach(el => {
                         const text = el.textContent || "";
-                        if (text.includes("email protected") || text.includes("[email") || text.includes("如有惡意廣告")) {
+                        if (text.includes("如有惡意廣告") || text.includes("截屏") || text.includes("發送至") || text.toLowerCase().includes("email protected")) {
                             el.remove();
                             totalAdsRemoved++;
                         }
                     });
 
-                    // 2. Dọn dẹp các thẻ rỗng hoặc style thừa phát sinh
+                    // 2. Dọn dẹp các thẻ rỗng
                     const allElements = doc.querySelectorAll('*');
                     allElements.forEach(el => {
                         if (el.hasAttribute('style')) el.removeAttribute('style');
@@ -473,12 +472,9 @@
 
                     let cleanBodyHtml = doc.body ? doc.body.innerHTML : htmlStr;
 
-                    // 3. Quét phủ đầu bằng Regex mạnh mẽ trên toàn bộ chuỗi HTML để bắt trọn rác ở chương 0/1
-                    const globalJunkRegex = /<[^>]*?>[\s\S]*?(email protected|\[email|如有惡意廣告)[\s\S]*?<\/[^>]*?>/gis;
-                    cleanBodyHtml = cleanBodyHtml.replace(globalJunkRegex, '');
-
-                    const rawTextJunkRegex = /.*?(email protected|\[email|如有惡意廣告).*?/gis;
-                    cleanBodyHtml = cleanBodyHtml.replace(rawTextJunkRegex, '');
+                    // 3. Quét phủ đầu bằng Regex bắt trọn câu rác dù bị ngắt thẻ hay nằm bất cứ đâu
+                    cleanBodyHtml = cleanBodyHtml.replace(/<[^>]*?>[\s\S]*?(如有惡意廣告|截屏|發送至|email)[\s\S]*?<\/[^>]*?>/gis, '');
+                    cleanBodyHtml = cleanBodyHtml.replace(/.*?(如有惡意廣告|截屏|發送至|email).*/gis, '');
 
                     fileContents[id] = htmlStr.replace(/(<body[^>]*>)([\s\S]*?)(<\/body>)/i, function(match, p1, p2, p3) {
                         return p1 + cleanBodyHtml + p3;
@@ -500,7 +496,7 @@
         }
 
         function executeFindReplaceAll() {
-            const findStr = document.getElementById('find-val').value;
+            let findStr = document.getElementById('find-val').value;
             const replaceStr = document.getElementById('replace-val').value;
             const isRegex = document.getElementById('fr-is-regex').checked;
             
@@ -513,7 +509,12 @@
             let totalMatches = 0;
 
             try {
-                let regex = isRegex ? new RegExp(findStr, 'g') : new RegExp(findStr.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g');
+                // Tự động mở rộng regex nếu tìm câu rác tiếng Trung
+                if (findStr.includes("如有惡意廣告")) {
+                    findStr = ".*?(如有惡意廣告|截屏|發送至|email).*?";
+                }
+
+                let regex = isRegex ? new RegExp(findStr, 'gi') : new RegExp(findStr.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
                 
                 spine.forEach(id => {
                     let content = fileContents[id];
