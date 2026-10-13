@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EPUB & TXT Editor - Tẩy Tủy Tông Sư</title>
+    <title>EPUB Editor - Tẩy Tủy Tông Sư</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -63,7 +63,7 @@
     <header class="bg-white dark:bg-slate-800 shadow-sm border-b border-slate-200 dark:border-slate-700 h-14 flex items-center justify-between px-4 shrink-0 z-10">
         <div class="flex items-center gap-3">
             <i class="fa-solid fa-book-journal-whills text-primary text-xl"></i>
-            <h1 class="font-bold text-lg tracking-tight">Tẩy Tủy EPUB & TXT - Raw Tiếng Trung</h1>
+            <h1 class="font-bold text-lg tracking-tight">Tẩy Tủy EPUB Editor</h1>
         </div>
         
         <div class="flex items-center gap-3">
@@ -73,8 +73,8 @@
             </button>
 
             <label class="cursor-pointer bg-slate-100 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 hover:bg-slate-200 dark:hover:bg-slate-600 text-sm font-medium py-1.5 px-3 rounded shadow-sm transition-colors flex items-center gap-2">
-                <i class="fa-solid fa-folder-open text-primary dark:text-blue-400"></i> Mở EPUB / TXT
-                <input type="file" id="file-input" accept=".epub,.txt" class="hidden">
+                <i class="fa-solid fa-folder-open text-primary dark:text-blue-400"></i> Mở File EPUB
+                <input type="file" id="file-input" accept=".epub" class="hidden">
             </label>
         </div>
     </header>
@@ -98,7 +98,7 @@
                 <ul id="spine-list" class="space-y-1">
                     <div class="h-full flex flex-col items-center justify-center text-slate-400 p-6 text-center space-y-3 mt-10">
                         <i class="fa-solid fa-box-open text-4xl opacity-50"></i>
-                        <p class="text-sm">Chưa tải file truyện (.epub hoặc .txt).</p>
+                        <p class="text-sm">Chưa tải file truyện (.epub).</p>
                     </div>
                 </ul>
             </div>
@@ -114,8 +114,7 @@
                     
                     <div class="w-px h-5 bg-slate-200 dark:bg-slate-600 mx-1"></div>
                     
-                    <button onclick="handleCleanAllChapters()" class="px-2.5 py-1.5 rounded bg-purple-50 text-purple-600 hover:bg-purple-100 dark:bg-purple-500/10 dark:text-purple-400 dark:hover:bg-purple-500/20 text-sm font-medium transition-colors" title="Dọn rác rỗng và quảng cáo toàn bộ các chương cùng lúc"><i class="fa-solid fa-broom mr-1"></i> Dọn Rác Toàn Bộ Truyện</button>
-                    <button onclick="openFindReplace()" class="px-2.5 py-1.5 rounded hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-sm font-medium transition-colors"><i class="fa-solid fa-magnifying-glass mr-1"></i> Regex & Tìm kiếm</button>
+                    <button onclick="handleCleanAllChapters()" class="px-3 py-1.5 rounded bg-purple-50 text-purple-600 hover:bg-purple-100 dark:bg-purple-500/10 dark:text-purple-400 dark:hover:bg-purple-500/20 text-sm font-medium transition-colors shadow-sm" title="Xóa sạch toàn bộ rác [email protected] trên toàn truyện"><i class="fa-solid fa-broom mr-1.5"></i> Dọn Sạch Rác Toàn Truyện</button>
                     
                     <div class="w-px h-5 bg-slate-200 dark:bg-slate-600 mx-1"></div>
                     
@@ -134,18 +133,15 @@
                 
                 <div id="welcome-message" class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 h-full text-center space-y-4">
                     <i class="fa-solid fa-wand-magic-sparkles text-6xl opacity-20"></i>
-                    <h2 class="text-lg font-medium">Sẵn sàng xử lý Raw</h2>
-                    <p class="text-sm">Chọn một chương bên cột trái hoặc mở file EPUB/TXT để bắt đầu.</p>
+                    <h2 class="text-lg font-medium">Sẵn sàng xử lý EPUB</h2>
+                    <p class="text-sm">Chọn một chương bên cột trái hoặc mở file EPUB để bắt đầu.</p>
                 </div>
             </div>
 
             <!-- Thanh Xuất File -->
             <div id="export-bar" class="h-14 bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 px-4 flex items-center justify-end gap-3 hidden">
-                <button onclick="handleExportTxt()" class="bg-slate-600 hover:bg-slate-700 text-white px-4 py-2 rounded shadow text-sm font-semibold flex items-center gap-2 transition-transform transform active:scale-95">
-                    <i class="fa-solid fa-file-lines"></i> Xuất File TXT
-                </button>
-                <button onclick="handleExportEpub()" class="bg-primary hover:bg-primary-hover text-white px-5 py-2 rounded shadow text-sm font-semibold flex items-center gap-2 transition-transform transform active:scale-95">
-                    <i class="fa-solid fa-download"></i> Xuất File EPUB
+                <button onclick="handleExportEpub()" class="bg-primary hover:bg-primary-hover text-white px-6 py-2 rounded shadow text-sm font-semibold flex items-center gap-2 transition-transform transform active:scale-95">
+                    <i class="fa-solid fa-download"></i> Xuất File EPUB Đã Sạch Rác
                 </button>
             </div>
         </section>
@@ -155,7 +151,7 @@
     <div id="loading-overlay" class="fixed inset-0 bg-slate-900/50 z-[100] flex flex-col items-center justify-center hidden">
         <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-2xl flex flex-col items-center gap-4 border border-slate-200 dark:border-slate-700 min-w-[220px]">
             <div class="spinner"></div>
-            <p id="loading-text" class="text-slate-700 dark:text-slate-200 font-medium">Đang nạp khí...</p>
+            <p id="loading-text" class="text-slate-700 dark:text-slate-200 font-medium">Đang xử lý...</p>
         </div>
     </div>
 
@@ -182,43 +178,6 @@
         </div>
     </div>
 
-    <!-- Find & Replace Modal -->
-    <div id="find-replace-modal" class="fixed inset-0 bg-slate-900/60 z-[105] flex items-center justify-center hidden">
-        <div class="bg-white dark:bg-slate-800 rounded-lg shadow-xl max-w-lg w-full p-5 mx-4 border border-slate-200 dark:border-slate-700">
-            <h3 class="text-lg font-bold text-primary dark:text-blue-400 mb-3 flex items-center gap-2"><i class="fa-solid fa-magnifying-glass"></i> Bộ nhớ Regex lưu sẵn (Toàn bộ truyện)</h3>
-            
-            <div class="space-y-3 mb-4">
-                <div>
-                    <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Chọn công thức Regex thường dùng</label>
-                    <select id="regex-preset-select" onchange="applyRegexPreset(this.value)" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded px-3 py-1.5 text-sm focus:border-primary outline-none">
-                        <option value="">-- Chọn mẫu có sẵn hoặc tự nhập bên dưới --</option>
-                        <option value="ads_zhihu">Xóa dòng rác / Quảng cáo / Thông báo bản quyền</option>
-                        <option value="clean_whitespace">Dọn khoảng trắng dư thừa đầu/cuối dòng</option>
-                        <option value="tag_cleaner">Lọc bỏ thẻ span rác định dạng inline</option>
-                        <option value="normalize_dots">Chuẩn hóa dấu chấm lửng (...)</option>
-                    </select>
-                </div>
-
-                <div>
-                    <label class="block text-xs font-medium text-slate-500 uppercase mb-1">Chuỗi cần tìm (Hỗ trợ Regex)</label>
-                    <input type="text" id="find-val" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded px-3 py-1.5 text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none">
-                </div>
-                <div>
-                    <label class="block text-xs font-medium text-slate-500 uppercase mb-1">Thay thế thành</label>
-                    <input type="text" id="replace-val" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded px-3 py-1.5 text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none">
-                </div>
-                <div class="flex items-center gap-2 mt-2">
-                    <input type="checkbox" id="fr-is-regex" class="rounded border-slate-300 text-primary">
-                    <label for="fr-is-regex" class="text-sm text-slate-600 dark:text-slate-300 cursor-pointer">Sử dụng Biểu thức chính quy (Regex)</label>
-                </div>
-            </div>
-            <div class="flex justify-end gap-2">
-                <button onclick="document.getElementById('find-replace-modal').classList.add('hidden')" class="bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-800 dark:text-white px-4 py-1.5 rounded text-sm font-medium">Đóng</button>
-                <button onclick="executeFindReplaceAll()" class="bg-primary hover:bg-primary-hover text-white px-4 py-1.5 rounded text-sm font-medium">Thay thế Toàn Bộ Truyện</button>
-            </div>
-        </div>
-    </div>
-
     <script>
         // --- Cấu hình Dark Mode ---
         const htmlEl = document.documentElement;
@@ -230,40 +189,7 @@
             localStorage.theme = htmlEl.classList.contains('dark') ? 'dark' : 'light';
         };
 
-        // --- Bộ nhớ Regex lưu sẵn (Đã tối ưu quét trọn rác email protected) ---
-        const REGEX_PRESETS = {
-            ads_zhihu: {
-                find: "(如有惡意廣告|email\\s*protected|\\[email|xbanxia|proton\\.me|Sponsored|You May Like|TradingView|Spread|đòn bẩy|chứng khoán|撤消)",
-                replace: "",
-                isRegex: true
-            },
-            clean_whitespace: {
-                find: "[ \\t]+([\\n\\r])",
-                replace: "$1",
-                isRegex: true
-            },
-            tag_cleaner: {
-                find: "<span[^>]*>([\\s\\S]*?)<\/span>",
-                replace: "$1",
-                isRegex: true
-            },
-            normalize_dots: {
-                find: "\\.{2,}",
-                replace: "...",
-                isRegex: true
-            }
-        };
-
-        function applyRegexPreset(key) {
-            if(!key || !REGEX_PRESETS[key]) return;
-            const preset = REGEX_PRESETS[key];
-            document.getElementById('find-val').value = preset.find;
-            document.getElementById('replace-val').value = preset.replace;
-            document.getElementById('fr-is-regex').checked = preset.isRegex;
-        }
-
         // --- Trạng thái toàn cục ---
-        let fileType = "epub";          
         let epubZip = null;             
         let opfPath = "";               
         let opfDoc = null;              
@@ -297,21 +223,15 @@
         function hideConfirm() { document.getElementById('custom-confirm').classList.add('hidden'); confirmCb = null; }
         document.getElementById('confirm-yes-btn').onclick = () => { if(confirmCb) confirmCb(); hideConfirm(); };
 
-        // --- Xử lý Mở file ---
+        // --- Xử lý Mở file EPUB ---
         document.getElementById('file-input').addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (!file) return;
 
-            const fileName = file.name.toLowerCase();
-            if (fileName.endsWith('.epub')) {
-                fileType = "epub";
-                loadEpubFile(file);
-            } else if (fileName.endsWith('.txt')) {
-                fileType = "txt";
-                loadTxtFile(file);
-            } else {
-                showAlert("Định dạng file không hỗ trợ! Vui lòng chọn file .epub hoặc .txt");
+            if (!file.name.toLowerCase().endsWith('.epub')) {
+                return showAlert("Chỉ hỗ trợ file định dạng .epub!");
             }
+            loadEpubFile(file);
         });
 
         async function loadEpubFile(file) {
@@ -373,80 +293,6 @@
                 }
             };
             reader.readAsArrayBuffer(file);
-        }
-
-        function loadTxtFile(file) {
-            showLoading("Đang đọc file TXT chuẩn UTF-8...");
-            spine = []; manifest = {}; reverseManifest = {}; fileContents = {}; fileTitles = {}; currentActiveId = null;
-            epubZip = null;
-
-            const reader = new FileReader();
-            reader.onload = function(event) {
-                try {
-                    const text = event.target.result;
-                    
-                    const chapterHeaderRegex = /(?:^|\n)(第\s*[0-9一二三四五六七八九十百千万零]+\s*章[^\n]*)/g;
-                    let matches = [];
-                    let match;
-                    while ((match = chapterHeaderRegex.exec(text)) !== null) {
-                        matches.push({ title: match[1].trim(), index: match.index });
-                    }
-
-                    let chapters = [];
-                    if (matches.length > 0) {
-                        if (matches[0].index > 0) {
-                            let introContent = text.substring(0, matches[0].index).trim();
-                            if (introContent) {
-                                chapters.push({ title: "Phần mở đầu / Giới thiệu", content: introContent });
-                            }
-                        }
-                        for (let i = 0; i < matches.length; i++) {
-                            let title = matches[i].title;
-                            let start = matches[i].index;
-                            let end = (i + 1 < matches.length) ? matches[i + 1].index : text.length;
-                            let rawChapterText = text.substring(start, end).trim();
-
-                            let lines = rawChapterText.split(/\r?\n/);
-                            if (lines.length > 0 && lines[0].trim().includes(title)) {
-                                lines.shift();
-                            }
-                            chapters.push({ title: title, content: lines.join("\n").trim() });
-                        }
-                    } else {
-                        chapters.push({ title: "Toàn bộ nội dung TXT", content: text });
-                    }
-
-                    chapters.forEach((chap, index) => {
-                        const id = `txt_chap_${index + 1}`;
-                        const href = `chapter_${index + 1}.xhtml`;
-                        
-                        manifest[id] = href;
-                        reverseManifest[href] = id;
-                        spine.push(id);
-                        
-                        const formattedHtmlBody = chap.content
-                            .split(/\r?\n/)
-                            .map(line => line.trim() ? `<p>${escapeHtml(line)}</p>` : `<br/>`)
-                            .join('');
-
-                        fileContents[id] = `<?xml version="1.0" encoding="utf-8"?>\n<!DOCTYPE html>\n<html xmlns="http://www.w3.org/1999/xhtml">\n<head><title>${escapeHtml(chap.title)}</title></head>\n<body><h2>${escapeHtml(chap.title)}</h2>${formattedHtmlBody}</body>\n</html>`;
-                        fileTitles[id] = chap.title;
-                    });
-
-                    renderSpineList();
-                    initSortable();
-                    ui.exportBar.classList.remove('hidden');
-                    hideLoading();
-                } catch(err) {
-                    hideLoading();
-                    showAlert("Lỗi đọc file TXT: " + err.message);
-                }
-            };
-            reader.readAsText(file, "UTF-8");
-        }
-
-        function escapeHtml(text) {
-            return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
         }
 
         function extractTitle(html, fallbackName) {
@@ -552,12 +398,12 @@
             typeTimeout = setTimeout(() => { handleSaveCurrent(); }, 1500);
         });
 
-        // --- Dọn rác TOÀN BỘ TRUYỆN (Đã cập nhật quét bứng sạch triệt để [email protected] ở chương 1 và mọi chương) ---
+        // --- TẬP trung dọn sạch triệt để rác [email protected] / email protected / [email ---
         function handleCleanAllChapters() {
             if(spine.length === 0) return showAlert("Chưa có chương nào được tải.");
             
-            showConfirm(`Bạn có chắc muốn dọn rác TOÀN BỘ ${spine.length} chương?\nThao tác này sẽ quét và xóa sạch các dòng rác chứa [email protected]!`, () => {
-                showLoading(`Đang quét và dọn rác ${spine.length} chương...`);
+            showConfirm(`Bạn có chắc muốn quét và dọn sạch vĩnh viễn rác chứa "[email protected]" trong toàn bộ ${spine.length} chương (bao gồm cả Chương 1)?`, () => {
+                showLoading(`Đang quét sạch rác toàn bộ truyện...`);
                 
                 handleSaveCurrent();
 
@@ -569,7 +415,7 @@
                     const parser = new DOMParser();
                     const doc = parser.parseFromString(htmlStr, 'text/html');
                     
-                    // 1. Quét qua toàn bộ thẻ đoạn văn, div, span, li... chứa từ khóa rác để xóa bỏ hoàn toàn
+                    // 1. Quét sâu qua mọi thẻ có khả năng chứa rác
                     const elements = doc.querySelectorAll('p, div, span, li, b, i, em, strong, section, blockquote');
                     elements.forEach(el => {
                         const text = el.textContent || "";
@@ -579,7 +425,7 @@
                         }
                     });
 
-                    // 2. Dọn sạch các thẻ rỗng hoặc style thừa
+                    // 2. Dọn dẹp các thẻ rỗng hoặc style thừa phát sinh
                     const allElements = doc.querySelectorAll('*');
                     allElements.forEach(el => {
                         if (el.hasAttribute('style')) el.removeAttribute('style');
@@ -595,7 +441,7 @@
 
                     let cleanBodyHtml = doc.body ? doc.body.innerHTML : htmlStr;
 
-                    // 3. Quét phủ đầu cấp độ chuỗi HTML bằng Regex (có hỗ trợ dotAll) để bắt trọn rác ở chương 1
+                    // 3. Quét dự phòng bằng Regex DotAll để bắt trọn mọi cụm rác phức tạp nhiều dòng ở Chương 1
                     const globalJunkRegex = /<p[^>]*>[\s\S]*?(email protected|\[email|如有惡意廣告)[\s\S]*?<\/p>/gis;
                     cleanBodyHtml = cleanBodyHtml.replace(globalJunkRegex, '');
 
@@ -609,51 +455,8 @@
                 }
 
                 hideLoading();
-                showAlert(`Dọn rác toàn bộ truyện thành công!\n- Đã quét qua: ${spine.length} chương (Bao gồm chương 1)\n- Đã xóa: ${totalAdsRemoved} vị trí chứa rác\n- Đã dọn: ${totalTagsRemoved} thẻ rỗng.`);
+                showAlert(`Đã dọn sạch rác thành công!\n- Tổng số chương quét: ${spine.length}\n- Đã xóa sạch: ${totalAdsRemoved} vị trí rác [email protected]\n- Đã dọn: ${totalTagsRemoved} thẻ rỗng.`);
             });
-        }
-
-        function openFindReplace() {
-            if(spine.length === 0) return showAlert("Vui lòng mở file truyện trước.");
-            document.getElementById('find-replace-modal').classList.add('hidden');
-            document.getElementById('find-replace-modal').classList.remove('hidden');
-        }
-
-        function executeFindReplaceAll() {
-            const findStr = document.getElementById('find-val').value;
-            const replaceStr = document.getElementById('replace-val').value;
-            const isRegex = document.getElementById('fr-is-regex').checked;
-            
-            if(!findStr) return showAlert("Vui lòng nhập chuỗi cần tìm!");
-            
-            document.getElementById('find-replace-modal').classList.add('hidden');
-            showLoading(`Đang thay thế hàng loạt trên ${spine.length} chương...`);
-            
-            handleSaveCurrent();
-            let totalMatches = 0;
-
-            try {
-                let regex = isRegex ? new RegExp(findStr, 'g') : new RegExp(findStr.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g');
-                
-                spine.forEach(id => {
-                    let content = fileContents[id];
-                    const matches = content.match(regex);
-                    if (matches) {
-                        totalMatches += matches.length;
-                        fileContents[id] = content.replace(regex, replaceStr);
-                    }
-                });
-
-                if (currentActiveId) {
-                    openChapter(currentActiveId);
-                }
-
-                hideLoading();
-                showAlert(`Đã hoàn tất thay thế hàng loạt trên toàn bộ truyện!\n- Tổng số vị trí được thay thế: ${totalMatches}`);
-            } catch (err) {
-                hideLoading();
-                showAlert("Lỗi Regex: " + err.message);
-            }
         }
 
         function handleSplitChapter() {
@@ -747,32 +550,14 @@
             });
         }
 
-        function handleExportTxt() {
-            handleSaveCurrent();
-            let fullText = "";
-            
-            spine.forEach(id => {
-                const parser = new DOMParser();
-                const doc = parser.parseFromString(fileContents[id], 'text/html');
-                const title = fileTitles[id] || "";
-                const bodyText = doc.body ? doc.body.innerText : "";
-                
-                fullText += (title ? title + "\n" : "") + bodyText + "\n\n";
-            });
-
-            const blob = new Blob([fullText], { type: "text/plain;charset=utf-8" });
-            saveAs(blob, "truyen_da_xu_ly.txt");
-        }
-
         async function handleExportEpub() {
             handleSaveCurrent();
             
-            if (fileType === "txt" || !epubZip || !opfDoc) {
-                showAlert("Đang khởi tạo gói EPUB mới từ các chương TXT...");
-                return exportNewEpubFromTxt();
+            if (!epubZip || !opfDoc) {
+                return showAlert("Chưa có dữ liệu EPUB hợp lệ để xuất.");
             }
 
-            showLoading("Đang đóng gói EPUB...");
+            showLoading("Đang đóng gói file EPUB...");
             try {
                 const opfBasePath = opfPath.includes('/') ? opfPath.substring(0, opfPath.lastIndexOf('/') + 1) : '';
                 const manifestNode = opfDoc.querySelector('manifest');
@@ -821,40 +606,6 @@
             } catch(e) {
                 hideLoading();
                 showAlert("Lỗi xuất EPUB: " + e.message);
-            }
-        }
-
-        async function exportNewEpubFromTxt() {
-            showLoading("Đang tạo file EPUB chuẩn từ TXT...");
-            try {
-                const zip = new JSZip();
-                zip.file("mimetype", "application/epub+zip", {compression: "STORE"});
-                
-                zip.folder("META-INF").file("container.xml", 
-                    `<?xml version="1.0" encoding="UTF-8"?>\n<container version="1.0" xmlns="urn:oasis:names:tc:opendocument:xmlns:container">\n  <rootfiles>\n    <rootfile full-path="OEBPS/content.opf" media-type="application/oebps-package+xml"/>\n  </rootfiles>\n</container>`
-                );
-
-                const oebps = zip.folder("OEBPS");
-                let manifestStr = "";
-                let spineStr = "";
-
-                spine.forEach((id, index) => {
-                    const href = manifest[id];
-                    oebps.file(href, fileContents[id]);
-                    manifestStr += `    <item id="${id}" href="${href}" media-type="application/xhtml+xml"/>\n`;
-                    spineStr += `    <itemref idref="${id}"/>\n`;
-                });
-
-                oebps.file("content.opf", 
-                    `<?xml version="1.0" encoding="UTF-8"?>\n<package xmlns="http://www.idpf.org/2007/opf" unique-id="BookId" version="2.0">\n  <metadata xmlns:dc="http://purl.org/dc/elements/1.1/">\n    <dc:title>Truyện Chuyển Đổi</dc:title>\n    <dc:language>zh</dc:language>\n  </metadata>\n  <manifest>\n${manifestStr}  </manifest>\n  <spine>\n${spineStr}  </spine>\n</package>`
-                );
-
-                const blob = await zip.generateAsync({ type: "blob", compression: "DEFLATE" });
-                saveAs(blob, "truyen_chuyen_doi.epub");
-                hideLoading();
-            } catch(e) {
-                hideLoading();
-                showAlert("Lỗi tạo EPUB: " + e.message);
             }
         }
     </script>
