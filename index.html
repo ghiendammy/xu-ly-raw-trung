@@ -352,17 +352,24 @@
             reader.readAsArrayBuffer(file);
         }
 
+        // --- Cải tiến hàm trích xuất tiêu đề an toàn tuyệt đối (Không bị cắt cụt ký tự) ---
         function extractTitle(html, fallbackName) {
-            const regex = /<(h[1-6]|title)[^>]*>(.*?第\s*[0-9一二三四五六七八九十百千万零]+\s*章.*?)<\/\1>/i;
-            const match = html.match(regex);
-            if (match && match[2]) return match[2].replace(/<[^>]+>/g, '').trim();
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
             
-            const tMatch = html.match(/<title[^>]*>(.*?)<\/title>/i);
-            if (tMatch && tMatch[1].trim()) return tMatch[1].replace(/<[^>]+>/g, '').trim();
+            // Ưu tiên 1: Đọc từ thẻ <title> của file XHTML (Đảm bảo chuẩn 100% theo bản gốc)
+            const titleEl = doc.querySelector('title');
+            if (titleEl && titleEl.textContent.trim()) {
+                return titleEl.textContent.trim();
+            }
             
-            const hMatch = html.match(/<h[12][^>]*>(.*?)<\/h[12]>/i);
-            if (hMatch && hMatch[1].trim()) return hMatch[1].replace(/<[^>]+>/g, '').trim();
+            // Ưu tiên 2: Đọc từ thẻ heading đầu tiên (h1, h2, h3)
+            const headingEl = doc.querySelector('h1, h2, h3');
+            if (headingEl && headingEl.textContent.trim()) {
+                return headingEl.textContent.trim();
+            }
             
+            // Fallback: Lấy tên file gốc
             return fallbackName;
         }
 
@@ -437,7 +444,7 @@
             ui.toolbar.classList.remove('hidden');
         }
 
-        // --- Hàm Lưu an toàn cho mọi chương (kể cả chapter_0.xhtml) kèm Toast thông báo ---
+        // --- Hàm Lưu an toàn tuyệt đối cho mọi chương (kể cả chapter_0.xhtml) kèm Toast thông báo ---
         function handleSaveCurrent(showNotification = false) {
             if (!currentActiveId) return;
             const newBody = ui.editor.innerHTML;
