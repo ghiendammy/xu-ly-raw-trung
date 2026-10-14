@@ -352,24 +352,20 @@
             reader.readAsArrayBuffer(file);
         }
 
-        // --- Cải tiến hàm trích xuất tiêu đề an toàn tuyệt đối (Không bị cắt cụt ký tự) ---
+        // --- Lấy tiêu đề nguyên bản từ thẻ <title> của file gốc (Chuẩn xác 100%, không bị cắt cụt) ---
         function extractTitle(html, fallbackName) {
+            const titleMatch = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
+            if (titleMatch && titleMatch[1].trim()) {
+                return titleMatch[1].replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+            }
+            
             const parser = new DOMParser();
             const doc = parser.parseFromString(html, 'text/html');
-            
-            // Ưu tiên 1: Đọc từ thẻ <title> của file XHTML (Đảm bảo chuẩn 100% theo bản gốc)
-            const titleEl = doc.querySelector('title');
-            if (titleEl && titleEl.textContent.trim()) {
-                return titleEl.textContent.trim();
-            }
-            
-            // Ưu tiên 2: Đọc từ thẻ heading đầu tiên (h1, h2, h3)
             const headingEl = doc.querySelector('h1, h2, h3');
             if (headingEl && headingEl.textContent.trim()) {
-                return headingEl.textContent.trim();
+                return headingEl.textContent.replace(/\s+/g, ' ').trim();
             }
             
-            // Fallback: Lấy tên file gốc
             return fallbackName;
         }
 
@@ -426,15 +422,19 @@
             });
         }
 
+        // --- Hiển thị nguyên vẹn toàn bộ nội dung trong thẻ <body> gốc (Không bị cắt mất đoạn đầu raw) ---
         function openChapter(id) {
             handleSaveCurrent(false); // Lưu ngầm chương cũ trước khi chuyển
 
             currentActiveId = id;
             const htmlStr = fileContents[id] || "";
             
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(htmlStr, 'text/html');
-            ui.editor.innerHTML = doc.body ? doc.body.innerHTML : htmlStr;
+            const bodyMatch = htmlStr.match(/<body\b[^>]*>([\s\S]*?)<\/body\s*>/gis);
+            if (bodyMatch && bodyMatch[1]) {
+                ui.editor.innerHTML = bodyMatch[1];
+            } else {
+                ui.editor.innerHTML = htmlStr;
+            }
             
             ui.currentName.textContent = manifest[id];
             renderSpineList(ui.searchInput.value);
@@ -450,7 +450,6 @@
             const newBody = ui.editor.innerHTML;
             const oldHtml = fileContents[currentActiveId];
             
-            // Regex bóc tách thân thẻ body cực kỳ an toàn, chống cứng ngắc với mọi namespace hoặc xuống dòng
             const bodyRegex = /(<body\b[^>]*>)([\s\S]*?)(<\/body\s*>)/gis;
             
             if (bodyRegex.test(oldHtml)) {
