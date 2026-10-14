@@ -352,19 +352,16 @@
             reader.readAsArrayBuffer(file);
         }
 
-        // --- Cải tiến tuyệt đối: Lấy tiêu đề từ thẻ heading đầu tiên (h1, h2) hoặc dòng tiêu đề trong nội dung body (Không bao giờ bị cụt chữ) ---
         function extractTitle(html, fallbackName) {
             const parser = new DOMParser();
             const doc = parser.parseFromString(html, 'text/html');
             
-            // Tìm thẻ heading chính trong nội dung (ví dụ h1 chứa tên chương như "第121章 往事已矣")
             const headingEl = doc.querySelector('h1, h2, h3');
             if (headingEl && headingEl.textContent.trim()) {
                 let text = headingEl.textContent.replace(/\s+/g, ' ').trim();
                 if (text.length > 0) return text;
             }
             
-            // Dự phòng: Lấy từ thẻ title nếu thẻ heading không có
             const titleEl = doc.querySelector('title');
             if (titleEl && titleEl.textContent.trim()) {
                 let text = titleEl.textContent.replace(/\s+/g, ' ').trim();
@@ -427,14 +424,14 @@
             });
         }
 
-        // --- Hiển thị nguyên vẹn toàn bộ nội dung trong thẻ <body> gốc (Không bị mất đoạn đầu) ---
+        // ĐÃ SỬA: Dùng cờ /is thay vì /gis
         function openChapter(id) {
-            handleSaveCurrent(false); // Lưu ngầm chương cũ trước khi chuyển
+            handleSaveCurrent(false); 
 
             currentActiveId = id;
             const htmlStr = fileContents[id] || "";
             
-            const bodyMatch = htmlStr.match(/<body\b[^>]*>([\s\S]*?)<\/body\s*>/gis);
+            const bodyMatch = htmlStr.match(/<body\b[^>]*>([\s\S]*?)<\/body\s*>/is);
             if (bodyMatch && bodyMatch[1]) {
                 ui.editor.innerHTML = bodyMatch[1];
             } else {
@@ -449,16 +446,15 @@
             ui.toolbar.classList.remove('hidden');
         }
 
-        // --- Hàm Lưu an toàn tuyệt đối cho mọi chương kèm Toast thông báo ---
+        // ĐÃ SỬA: Dùng cờ /is thay vì /gis
         function handleSaveCurrent(showNotification = false) {
             if (!currentActiveId) return;
             const newBody = ui.editor.innerHTML;
             const oldHtml = fileContents[currentActiveId];
             
-            const bodyRegex = /(<body\b[^>]*>)([\s\S]*?)(<\/body\s*>)/gis;
+            const bodyRegex = /(<body\b[^>]*>)([\s\S]*?)(<\/body\s*>)/is;
             
             if (bodyRegex.test(oldHtml)) {
-                bodyRegex.lastIndex = 0;
                 fileContents[currentActiveId] = oldHtml.replace(bodyRegex, function(match, p1, p2, p3) {
                     return p1 + newBody + p3;
                 });
@@ -481,41 +477,29 @@
             typeTimeout = setTimeout(() => { handleSaveCurrent(false); }, 1500);
         });
 
-        // --- DỌN SẠCH CHỈ ĐÚNG DÒNG QUẢNG CÁO (AN TOÀN TUYỆT ĐỐI) ---
+        // ĐÃ SỬA: Loại bỏ DOMParser, dùng Regex để xóa đúng dòng quảng cáo, bảo toàn 100% định dạng raw
         function handleCleanAllChapters() {
             if(spine.length === 0) return showAlert("Chưa có chương nào được tải.");
             
-            showConfirm(`Bạn có chắc muốn quét và dọn sạch dòng quảng cáo "如有惡意廣告" trong toàn bộ ${spine.length} chương?`, () => {
+            showConfirm(`Bạn có chắc muốn quét và dọn sạch dòng quảng cáo trong toàn bộ ${spine.length} chương?`, () => {
                 showLoading(`Đang dọn sạch quảng cáo toàn truyện...`);
                 
                 handleSaveCurrent(false);
-
                 let totalAdsRemoved = 0;
 
                 spine.forEach(id => {
                     let htmlStr = fileContents[id] || "";
-                    const parser = new DOMParser();
-                    const doc = parser.parseFromString(htmlStr, 'text/html');
+                    const originalLength = htmlStr.length;
+
+                    const adRegex1 = /如有惡意廣告(?:，|,)?請將截屏或錄屏發送至\s*(?:\[email\&\#160\;protected\]|\[email\s*protected\])/gi;
+                    const adRegex2 = /如有惡意廣告，請將截屏或錄屏發送至/gi;
                     
-                    const elements = doc.querySelectorAll('p, div, span, li, b, i, em, strong, section, blockquote');
-                    elements.forEach(el => {
-                        const text = el.textContent || "";
-                        if (text.includes("如有惡意廣告") || text.includes("截屏") || text.includes("發送至") || text.toLowerCase().includes("email protected")) {
-                            el.remove();
-                            totalAdsRemoved++;
-                        }
-                    });
+                    htmlStr = htmlStr.replace(adRegex1, '');
+                    htmlStr = htmlStr.replace(adRegex2, '');
 
-                    let cleanBodyHtml = doc.body ? doc.body.innerHTML : htmlStr;
-
-                    const bodyRegex = /(<body\b[^>]*>)([\s\S]*?)(<\/body\s*>)/gis;
-                    if (bodyRegex.test(htmlStr)) {
-                        bodyRegex.lastIndex = 0;
-                        fileContents[id] = htmlStr.replace(bodyRegex, function(match, p1, p2, p3) {
-                            return p1 + cleanBodyHtml + p3;
-                        });
-                    } else {
-                        fileContents[id] = `<body>${cleanBodyHtml}</body>`;
+                    if (htmlStr.length !== originalLength) {
+                        totalAdsRemoved++;
+                        fileContents[id] = htmlStr;
                     }
                 });
 
@@ -524,7 +508,7 @@
                 }
 
                 hideLoading();
-                showAlert(`Đã dọn sạch quảng cáo thành công!\n- Tổng số chương quét: ${spine.length}\n- Đã xóa chính xác: ${totalAdsRemoved} dòng quảng cáo.`);
+                showAlert(`Đã dọn sạch quảng cáo thành công!\n- Tổng số chương quét: ${spine.length}\n- Đã dọn rác ở: ${totalAdsRemoved} chương.`);
             });
         }
 
@@ -593,7 +577,8 @@
                 const newHref = `chapter_${timestamp}.xhtml`;
                 
                 const baseHtml = fileContents[currentActiveId];
-                const part2Html = baseHtml.replace(/(<body\b[^>]*>)([\s\S]*?)(<\/body\s*>)/gis, '$1' + parts[1] + '$3');
+                // ĐÃ SỬA: Dùng cờ /is thay vì /gis
+                const part2Html = baseHtml.replace(/(<body\b[^>]*>)([\s\S]*?)(<\/body\s*>)/is, '$1' + parts[1] + '$3');
                 
                 manifest[newId] = newHref;
                 reverseManifest[newHref] = newId;
