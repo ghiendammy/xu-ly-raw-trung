@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EPUB Editor - Tẩy Tủy Tông Sư</title>
+    <title>EPUB Ultimate Studio - Tẩy Tủy Tông Sư</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -31,72 +31,49 @@
     <style>
         body { background-color: #f8fafc; }
         .dark body { background-color: #0f172a; }
-
-        /* Custom Scrollbar */
         ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
         .dark ::-webkit-scrollbar-thumb { background: #475569; }
-        .dark ::-webkit-scrollbar-thumb:hover { background: #64748b; }
-
-        /* Editor Styles */
-        #editor-content { outline: none; min-height: 100%; }
-        #editor-content img { max-width: 100%; height: auto; border-radius: 4px; margin: 10px 0; }
-        
-        /* Drag Items */
         .sortable-ghost { opacity: 0.4; background-color: #e2e8f0; }
         .dark .sortable-ghost { background-color: #334155; }
         .file-item { transition: background-color 0.2s ease, border-color 0.2s ease; }
         .file-item.active { background-color: #eff6ff; border-left: 4px solid #0066cc; }
         .dark .file-item.active { background-color: rgba(0, 102, 204, 0.15); border-left: 4px solid #3b82f6; }
-
-        /* Loading Spinner */
         #loading-overlay { backdrop-filter: blur(4px); }
         .spinner { border: 4px solid rgba(0, 102, 204, 0.1); width: 48px; height: 48px; border-radius: 50%; border-left-color: #0066cc; animation: spin 1s linear infinite; }
-        .dark .spinner { border: 4px solid rgba(59, 130, 246, 0.1); border-left-color: #3b82f6; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
-        /* Toast Notification Animation */
-        #toast {
-            transition: transform 0.3s ease, opacity 0.3s ease;
-        }
     </style>
 </head>
-<body class="h-screen flex flex-col overflow-hidden text-slate-800 dark:text-slate-200 transition-colors duration-200">
+<body class="h-screen flex flex-col overflow-hidden text-slate-800 dark:text-slate-200">
 
     <header class="bg-white dark:bg-slate-800 shadow-sm border-b border-slate-200 dark:border-slate-700 h-14 flex items-center justify-between px-4 shrink-0 z-10">
         <div class="flex items-center gap-3">
-            <i class="fa-solid fa-book-journal-whills text-primary text-xl"></i>
-            <h1 class="font-bold text-lg tracking-tight">Tẩy Tủy EPUB Editor</h1>
+            <i class="fa-solid fa-wand-magic-sparkles text-primary text-xl"></i>
+            <h1 class="font-bold text-base md:text-lg tracking-tight">EPUB Ultimate Studio (Đầy Đủ Tính Năng)</h1>
         </div>
         
-        <div class="flex items-center gap-3">
-            <button id="theme-toggle" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 flex items-center justify-center hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors" title="Chế độ Tối/Sáng">
+        <div class="flex items-center gap-2 md:gap-3">
+            <button id="theme-toggle" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors" title="Đổi giao diện Sáng/Tối">
                 <i class="fa-solid fa-moon dark:hidden"></i>
                 <i class="fa-solid fa-sun hidden dark:block"></i>
             </button>
 
-            <label class="cursor-pointer bg-slate-100 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 hover:bg-slate-200 dark:hover:bg-slate-600 text-sm font-medium py-1.5 px-3 rounded shadow-sm transition-colors flex items-center gap-2">
-                <i class="fa-solid fa-folder-open text-primary dark:text-blue-400"></i> Mở File EPUB
+            <label class="cursor-pointer bg-slate-100 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 hover:bg-slate-200 dark:hover:bg-slate-600 text-xs md:text-sm font-medium py-1.5 px-3 rounded shadow-sm transition-colors flex items-center gap-2">
+                <i class="fa-solid fa-folder-open text-primary"></i> Mở EPUB
                 <input type="file" id="file-input" accept=".epub" class="hidden">
             </label>
         </div>
     </header>
 
     <main class="flex-1 flex overflow-hidden">
-        
-        <!-- Cột Trái: Sidebar -->
+        <!-- Cột Trái: Sidebar danh sách chương -->
         <aside class="w-[300px] bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 flex flex-col shrink-0">
             <div class="p-3 border-b border-slate-100 dark:border-slate-700/50">
                 <div class="flex justify-between items-center mb-2">
-                    <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Tổng chương: <span id="chapter-count" class="text-primary dark:text-blue-400 font-bold text-sm">0</span></span>
-                    <button onclick="handleAddChapter()" class="text-xs bg-primary hover:bg-primary-hover text-white py-1 px-2 rounded transition-colors shadow-sm" title="Thêm chương mới"><i class="fa-solid fa-plus"></i> Thêm</button>
+                    <span class="text-xs font-semibold text-slate-500 uppercase">Tổng chương: <span id="chapter-count" class="text-primary font-bold">0</span></span>
+                    <button onclick="handleAddChapter()" class="text-xs bg-primary hover:bg-primary-hover text-white py-1 px-2 rounded shadow-sm"><i class="fa-solid fa-plus"></i> Thêm</button>
                 </div>
-                <div class="relative">
-                    <i class="fa-solid fa-search text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 text-xs"></i>
-                    <input type="text" id="search-input" placeholder="Lọc tên chương..." class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded pl-7 pr-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary">
-                </div>
+                <input type="text" id="search-input" placeholder="Lọc tên chương..." class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded px-3 py-1.5 text-sm outline-none focus:ring-1 focus:ring-primary">
             </div>
             
             <div class="flex-1 overflow-y-auto p-2">
@@ -109,57 +86,43 @@
             </div>
         </aside>
 
-        <!-- Cột Phải: Main Editor -->
+        <!-- Cột Phải: Main Content & Editor -->
         <section class="flex-1 flex flex-col bg-slate-50 dark:bg-slate-900 relative">
             
-            <!-- Editor Toolbar -->
+            <!-- Toolbar chức năng -->
             <div id="toolbar" class="h-12 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 px-3 flex items-center justify-between hidden">
-                <div class="flex items-center gap-1.5">
-                    <button onclick="handleSaveCurrent(true)" class="px-2.5 py-1.5 rounded bg-green-50 text-green-600 hover:bg-green-100 dark:bg-green-500/10 dark:text-green-400 dark:hover:bg-green-500/20 text-sm font-medium transition-colors" title="Lưu thủ công"><i class="fa-solid fa-save mr-1"></i> Lưu</button>
-                    
-                    <div class="w-px h-5 bg-slate-200 dark:bg-slate-600 mx-1"></div>
-                    
-                    <button onclick="handleCleanAllChapters()" class="px-3 py-1.5 rounded bg-purple-50 text-purple-600 hover:bg-purple-100 dark:bg-purple-500/10 dark:text-purple-400 dark:hover:bg-purple-500/20 text-sm font-medium transition-colors shadow-sm" title="Dọn sạch dòng quảng cáo toàn truyện"><i class="fa-solid fa-broom mr-1.5"></i> Dọn Sạch Rác Toàn Truyện</button>
-                    <button onclick="openFindReplace()" class="px-2.5 py-1.5 rounded hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-sm font-medium transition-colors"><i class="fa-solid fa-magnifying-glass mr-1"></i> Regex & Tìm kiếm</button>
-                    
-                    <div class="w-px h-5 bg-slate-200 dark:bg-slate-600 mx-1"></div>
-                    
-                    <button onclick="handleSplitChapter()" class="px-2 py-1.5 rounded hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-sm transition-colors" title="Tách đôi chương tại vị trí con trỏ"><i class="fa-solid fa-scissors"></i> Tách</button>
-                    <button onclick="handleMergeNext()" class="px-2 py-1.5 rounded hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-sm transition-colors" title="Gộp chương hiện tại với chương kế tiếp"><i class="fa-solid fa-link"></i> Gộp</button>
+                <div class="flex items-center gap-1.5 overflow-x-auto">
+                    <button onclick="handleSaveCurrent(true)" class="px-2.5 py-1 rounded bg-green-50 text-green-600 hover:bg-green-100 text-xs font-medium"><i class="fa-solid fa-save mr-1"></i> Lưu</button>
+                    <button onclick="handleCleanAllChapters()" class="px-2.5 py-1 rounded bg-purple-50 text-purple-600 hover:bg-purple-100 text-xs font-medium"><i class="fa-solid fa-broom mr-1"></i> Xóa Rác Toàn Truyện</button>
+                    <button onclick="openFindReplace()" class="px-2.5 py-1 rounded hover:bg-slate-100 dark:hover:bg-slate-700 text-xs font-medium"><i class="fa-solid fa-magnifying-glass mr-1"></i> Tìm & Thay Thế</button>
                 </div>
-                
-                <span id="current-file-name" class="text-xs font-medium text-slate-400 truncate max-w-[150px]"></span>
+                <span id="current-file-name" class="text-xs font-medium text-slate-400 truncate max-w-[150px] hidden md:block"></span>
             </div>
 
-            <!-- Editor Khung Soạn Thảo -->
-            <div class="flex-1 overflow-y-auto p-4 md:p-8 flex justify-center">
-                <div id="editor-container" class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 w-full max-w-3xl p-6 md:p-10 min-h-full hidden">
-                    <div id="editor-content" contenteditable="true" class="prose prose-slate dark:prose-invert max-w-none text-base leading-relaxed"></div>
+            <!-- Khung soạn thảo văn bản (Raw Text Mode bảo toàn 100% chữ không lo mất) -->
+            <div class="flex-1 overflow-hidden p-4 flex flex-col">
+                <div id="editor-container" class="flex-1 flex flex-col bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-4 hidden">
+                    <textarea id="editor-textarea" class="w-full flex-1 bg-transparent text-slate-800 dark:text-slate-100 font-mono text-sm leading-relaxed outline-none resize-none" placeholder="Nội dung chương..."></textarea>
                 </div>
                 
-                <div id="welcome-message" class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 h-full text-center space-y-4">
-                    <i class="fa-solid fa-wand-magic-sparkles text-6xl opacity-20"></i>
-                    <h2 class="text-lg font-medium">Sẵn sàng xử lý EPUB</h2>
-                    <p class="text-sm">Chọn một chương bên cột trái hoặc mở file EPUB để bắt đầu.</p>
+                <div id="welcome-message" class="flex flex-col items-center justify-center text-slate-400 h-full text-center space-y-3">
+                    <i class="fa-solid fa-feather text-6xl opacity-20"></i>
+                    <h2 class="text-lg font-medium">Chọn một chương ở cột trái để bắt đầu chỉnh sửa</h2>
+                    <p class="text-sm">Bảo đảm không bao giờ bị mất tiêu đề hay khúc đầu chương!</p>
                 </div>
             </div>
 
-            <!-- Thanh Xuất File -->
+            <!-- Thanh xuất file ở dưới cùng: Đầy đủ nút xuất EPUB và xuất TXT -->
             <div id="export-bar" class="h-14 bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 px-4 flex items-center justify-end gap-3 hidden">
-                <button onclick="handleExportEpub()" class="bg-primary hover:bg-primary-hover text-white px-6 py-2 rounded shadow text-sm font-semibold flex items-center gap-2 transition-transform transform active:scale-95">
-                    <i class="fa-solid fa-download"></i> Xuất File EPUB Đã Sạch Rác
+                <button onclick="handleExportTxt()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded shadow text-xs md:text-sm font-semibold flex items-center gap-2">
+                    <i class="fa-solid fa-file-arrow-down"></i> Tải Về File TXT Sạch
+                </button>
+                <button onclick="handleExportEpub()" class="bg-primary hover:bg-primary-hover text-white px-4 py-2 rounded shadow text-xs md:text-sm font-semibold flex items-center gap-2">
+                    <i class="fa-solid fa-download"></i> Xuất File EPUB Mới
                 </button>
             </div>
         </section>
     </main>
-
-    <!-- Toast Notification Nhỏ Gọn -->
-    <div id="toast" class="fixed top-5 right-5 z-[120] transform translate-y-[-20px] opacity-0 pointer-events-none transition-all duration-300">
-        <div class="bg-slate-900 text-white dark:bg-white dark:text-slate-900 px-4 py-2.5 rounded-lg shadow-xl text-sm font-medium flex items-center gap-2.5 border border-slate-700 dark:border-slate-200">
-            <i class="fa-solid fa-circle-check text-green-400 dark:text-green-600"></i>
-            <span id="toast-message">Đã lưu thành công!</span>
-        </div>
-    </div>
 
     <!-- Loading Overlay -->
     <div id="loading-overlay" class="fixed inset-0 bg-slate-900/50 z-[100] flex flex-col items-center justify-center hidden">
@@ -169,57 +132,28 @@
         </div>
     </div>
 
-    <!-- Alert Modal -->
-    <div id="custom-alert" class="fixed inset-0 bg-slate-900/60 z-[110] flex items-center justify-center hidden">
-        <div class="bg-white dark:bg-slate-800 rounded-lg shadow-xl max-w-sm w-full p-5 mx-4 border border-slate-200 dark:border-slate-700">
-            <h3 class="text-lg font-bold text-slate-800 dark:text-white mb-2 flex items-center gap-2"><i class="fa-solid fa-circle-exclamation text-amber-500"></i> Thông báo</h3>
-            <p id="alert-message" class="text-slate-600 dark:text-slate-300 text-sm mb-5 whitespace-pre-line"></p>
-            <div class="flex justify-end">
-                <button onclick="hideAlert()" class="bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-800 dark:text-white px-4 py-1.5 rounded text-sm font-medium">Đóng</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Confirm Modal -->
-    <div id="custom-confirm" class="fixed inset-0 bg-slate-900/60 z-[110] flex items-center justify-center hidden">
-        <div class="bg-white dark:bg-slate-800 rounded-lg shadow-xl max-w-sm w-full p-5 mx-4 border border-slate-200 dark:border-slate-700">
-            <h3 class="text-lg font-bold text-red-500 mb-2 flex items-center gap-2"><i class="fa-solid fa-triangle-exclamation"></i> Xác nhận</h3>
-            <p id="confirm-message" class="text-slate-600 dark:text-slate-300 text-sm mb-5 whitespace-pre-line"></p>
-            <div class="flex justify-end gap-2">
-                <button onclick="hideConfirm()" class="bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-800 dark:text-white px-4 py-1.5 rounded text-sm font-medium">Hủy</button>
-                <button id="confirm-yes-btn" class="bg-red-500 hover:bg-red-600 text-white px-4 py-1.5 rounded text-sm font-medium shadow-sm">Đồng ý</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Find & Replace Modal -->
+    <!-- Modal Tìm & Thay thế -->
     <div id="find-replace-modal" class="fixed inset-0 bg-slate-900/60 z-[105] flex items-center justify-center hidden">
         <div class="bg-white dark:bg-slate-800 rounded-lg shadow-xl max-w-lg w-full p-5 mx-4 border border-slate-200 dark:border-slate-700">
-            <h3 class="text-lg font-bold text-primary dark:text-blue-400 mb-3 flex items-center gap-2"><i class="fa-solid fa-magnifying-glass"></i> Tìm & Thay Thế Nhanh</h3>
-            
+            <h3 class="text-lg font-bold text-primary mb-3"><i class="fa-solid fa-magnifying-glass"></i> Tìm & Thay Thế Nhanh Toàn Truyện</h3>
             <div class="space-y-3 mb-4">
                 <div>
-                    <label class="block text-xs font-medium text-slate-500 uppercase mb-1">Chuỗi cần tìm (Hỗ trợ Regex)</label>
-                    <input type="text" id="find-val" value="如有惡意廣告" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded px-3 py-1.5 text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none">
+                    <label class="block text-xs font-medium text-slate-500 uppercase mb-1">Chuỗi cần tìm</label>
+                    <input type="text" id="find-val" value="如有惡意廣告" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded px-3 py-1.5 text-sm outline-none focus:ring-1 focus:ring-primary">
                 </div>
                 <div>
                     <label class="block text-xs font-medium text-slate-500 uppercase mb-1">Thay thế thành</label>
-                    <input type="text" id="replace-val" value="" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded px-3 py-1.5 text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none">
-                </div>
-                <div class="flex items-center gap-2 mt-2">
-                    <input type="checkbox" id="fr-is-regex" class="rounded border-slate-300 text-primary" checked>
-                    <label for="fr-is-regex" class="text-sm text-slate-600 dark:text-slate-300 cursor-pointer">Sử dụng Biểu thức chính quy (Regex)</label>
+                    <input type="text" id="replace-val" value="" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded px-3 py-1.5 text-sm outline-none focus:ring-1 focus:ring-primary">
                 </div>
             </div>
             <div class="flex justify-end gap-2">
-                <button onclick="document.getElementById('find-replace-modal').classList.add('hidden')" class="bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-800 dark:text-white px-4 py-1.5 rounded text-sm font-medium">Đóng</button>
-                <button onclick="executeFindReplaceAll()" class="bg-primary hover:bg-primary-hover text-white px-4 py-1.5 rounded text-sm font-medium">Thay thế Toàn Bộ Truyện</button>
+                <button onclick="document.getElementById('find-replace-modal').classList.add('hidden')" class="bg-slate-200 dark:bg-slate-700 px-4 py-1.5 rounded text-sm">Đóng</button>
+                <button onclick="executeFindReplaceAll()" class="bg-primary text-white px-4 py-1.5 rounded text-sm">Thay Thế Toàn Bộ</button>
             </div>
         </div>
     </div>
 
     <script>
-        // --- Cấu hình Dark Mode ---
         const htmlEl = document.documentElement;
         if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
             htmlEl.classList.add('dark');
@@ -229,22 +163,20 @@
             localStorage.theme = htmlEl.classList.contains('dark') ? 'dark' : 'light';
         };
 
-        // --- Trạng thái toàn cục ---
-        let epubZip = null;             
-        let opfPath = "";               
-        let opfDoc = null;              
-        let spine = [];                 
-        let manifest = {};              
-        let reverseManifest = {};       
-        let fileContents = {};          
-        let fileTitles = {};            
-        let currentActiveId = null;     
-        let spineSortable = null;       
+        let epubZip = null;
+        let opfPath = "";
+        let opfDoc = null;
+        let spine = [];
+        let manifest = {};
+        let fileContents = {};
+        let fileTitles = {};
+        let currentActiveId = null;
+        let spineSortable = null;
 
         const ui = {
             list: document.getElementById('spine-list'),
             searchInput: document.getElementById('search-input'),
-            editor: document.getElementById('editor-content'),
+            textarea: document.getElementById('editor-textarea'),
             editorContainer: document.getElementById('editor-container'),
             welcome: document.getElementById('welcome-message'),
             toolbar: document.getElementById('toolbar'),
@@ -255,421 +187,181 @@
 
         function showLoading(text) { document.getElementById('loading-text').textContent = text; document.getElementById('loading-overlay').classList.remove('hidden'); }
         function hideLoading() { document.getElementById('loading-overlay').classList.add('hidden'); }
-        function showAlert(msg) { document.getElementById('alert-message').textContent = msg; document.getElementById('custom-alert').classList.remove('hidden'); }
-        function hideAlert() { document.getElementById('custom-alert').classList.add('hidden'); }
-        
-        let confirmCb = null;
-        function showConfirm(msg, cb) { document.getElementById('confirm-message').textContent = msg; confirmCb = cb; document.getElementById('custom-confirm').classList.remove('hidden'); }
-        function hideConfirm() { document.getElementById('custom-confirm').classList.add('hidden'); confirmCb = null; }
-        
-        document.getElementById('confirm-yes-btn').onclick = () => { 
-            if(confirmCb) confirmCb(); 
-            hideConfirm(); 
-        };
 
-        function showToast(message = "Đã lưu thành công!") {
-            const toast = document.getElementById('toast');
-            document.getElementById('toast-message').textContent = message;
-            toast.classList.remove('translate-y-[-20px]', 'opacity-0', 'pointer-events-none');
-            toast.classList.add('translate-y-0', 'opacity-100');
-            
-            setTimeout(() => {
-                toast.classList.remove('translate-y-0', 'opacity-100');
-                toast.classList.add('translate-y-[-20px]', 'opacity-0', 'pointer-events-none');
-            }, 2500);
-        }
-
-        // --- Xử lý Mở file EPUB ---
         document.getElementById('file-input').addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (!file) return;
-
-            if (!file.name.toLowerCase().endsWith('.epub')) {
-                return showAlert("Chỉ hỗ trợ file định dạng .epub!");
-            }
             loadEpubFile(file);
         });
 
         async function loadEpubFile(file) {
-            showLoading(`Đang phân tích EPUB...`);
+            showLoading("Đang mở file EPUB...");
             epubZip = new JSZip();
-            spine = []; manifest = {}; reverseManifest = {}; fileContents = {}; fileTitles = {}; currentActiveId = null;
+            spine = []; manifest = {}; fileContents = {}; fileTitles = {}; currentActiveId = null;
 
-            const reader = new FileReader();
-            reader.onload = async function(event) {
-                try {
-                    await epubZip.loadAsync(event.target.result);
-                    
-                    const containerXml = await epubZip.file("META-INF/container.xml").async("string");
-                    const containerParser = new DOMParser();
-                    const containerDoc = containerParser.parseFromString(containerXml, 'text/xml');
-                    const rootfile = containerDoc.querySelector('rootfile');
-                    if(!rootfile) throw new Error("Không tìm thấy rootfile trong container.xml");
-                    
-                    opfPath = rootfile.getAttribute('full-path');
-                    const opfBasePath = opfPath.includes('/') ? opfPath.substring(0, opfPath.lastIndexOf('/') + 1) : '';
+            try {
+                await epubZip.loadAsync(file.arrayBuffer());
+                const containerXml = await epubZip.file("META-INF/container.xml").async("string");
+                const parser = new DOMParser();
+                const containerDoc = parser.parseFromString(containerXml, 'text/xml');
+                opfPath = containerDoc.querySelector('rootfile').getAttribute('full-path');
+                const opfBasePath = opfPath.includes('/') ? opfPath.substring(0, opfPath.lastIndexOf('/') + 1) : '';
 
-                    const opfStr = await epubZip.file(opfPath).async("string");
-                    opfDoc = containerParser.parseFromString(opfStr, 'text/xml');
-                    
-                    opfDoc.querySelectorAll('manifest > item').forEach(item => {
-                        const id = item.getAttribute('id');
-                        const href = item.getAttribute('href');
-                        manifest[id] = href;
-                        reverseManifest[href] = id;
-                    });
+                const opfStr = await epubZip.file(opfPath).async("string");
+                opfDoc = parser.parseFromString(opfStr, 'text/xml');
+                
+                opfDoc.querySelectorAll('manifest > item').forEach(item => {
+                    manifest[item.getAttribute('id')] = item.getAttribute('href');
+                });
 
-                    opfDoc.querySelectorAll('spine > itemref').forEach(ref => {
-                        spine.push(ref.getAttribute('idref'));
-                    });
+                opfDoc.querySelectorAll('spine > itemref').forEach(ref => {
+                    spine.push(ref.getAttribute('idref'));
+                });
 
-                    showLoading(`Đang nạp nội dung ${spine.length} chương...`);
-                    
-                    await Promise.all(spine.map(async (id) => {
-                        const href = manifest[id];
-                        const fullPath = opfBasePath + href;
-                        let fileObj = epubZip.file(fullPath) || epubZip.file(decodeURIComponent(fullPath));
-                        if(fileObj) {
-                            const content = await fileObj.async("string");
-                            fileContents[id] = content;
-                            fileTitles[id] = extractTitle(content, href);
-                        } else {
-                            fileTitles[id] = "Lỗi: Không tìm thấy file " + href;
-                        }
-                    }));
+                await Promise.all(spine.map(async (id) => {
+                    const href = manifest[id];
+                    const fullPath = opfBasePath + href;
+                    let fileObj = epubZip.file(fullPath) || epubZip.file(decodeURIComponent(fullPath));
+                    if(fileObj) {
+                        const content = await fileObj.async("string");
+                        fileContents[id] = content;
+                        fileTitles[id] = extractTitle(content, href);
+                    }
+                }));
 
-                    renderSpineList();
-                    initSortable();
-                    ui.exportBar.classList.remove('hidden');
-                    hideLoading();
-
-                } catch (err) {
-                    hideLoading();
-                    showAlert("Lỗi khi mở EPUB: " + err.message);
-                }
-            };
-            reader.readAsArrayBuffer(file);
+                renderSpineList();
+                initSortable();
+                ui.exportBar.classList.remove('hidden');
+                hideLoading();
+            } catch (err) {
+                hideLoading();
+                alert("Lỗi mở file: " + err.message);
+            }
         }
 
-        // --- Cải tiến trích xuất tiêu đề thông minh ---
-        function extractTitle(html, fallbackName) {
+        function extractTitle(html, fallback) {
             const parser = new DOMParser();
             const doc = parser.parseFromString(html, 'text/html');
-            
-            // 1. Ưu tiên tìm các thẻ tiêu đề (h1, h2, h3)
-            const headingEl = doc.querySelector('h1, h2, h3');
-            if (headingEl && headingEl.textContent.trim()) {
-                let text = headingEl.textContent.replace(/\s+/g, ' ').trim();
-                if (text.length > 0) return text;
-            }
-            
-            // 2. Dự phòng lấy từ thẻ <title>
-            const titleEl = doc.querySelector('title');
-            if (titleEl && titleEl.textContent.trim()) {
-                let text = titleEl.textContent.replace(/\s+/g, ' ').trim();
-                if (text.length > 0) return text;
-            }
-            
-            return fallbackName;
+            const h = doc.querySelector('h1, h2, h3');
+            if (h && h.textContent.trim()) return h.textContent.replace(/\s+/g, ' ').trim();
+            const t = doc.querySelector('title');
+            if (t && t.textContent.trim()) return t.textContent.replace(/\s+/g, ' ').trim();
+            return fallback;
         }
 
-        function renderSpineList(filterText = "") {
+        function renderSpineList(filter = "") {
             ui.list.innerHTML = '';
             ui.count.textContent = spine.length;
-            
-            filterText = filterText.toLowerCase();
-            let countMatch = 0;
+            filter = filter.toLowerCase();
 
-            spine.forEach((id) => {
-                const href = manifest[id];
-                const title = fileTitles[id] || href;
-                
-                if (filterText && !title.toLowerCase().includes(filterText) && !href.toLowerCase().includes(filterText)) return;
-                countMatch++;
+            spine.forEach(id => {
+                const title = fileTitles[id] || manifest[id];
+                if (filter && !title.toLowerCase().includes(filter)) return;
 
                 const li = document.createElement('li');
                 li.className = `file-item flex items-center justify-between p-2.5 rounded cursor-pointer border border-transparent group ${currentActiveId === id ? 'active' : 'hover:bg-slate-100 dark:hover:bg-slate-700'}`;
-                li.setAttribute('data-id', id);
-                
                 li.innerHTML = `
                     <div class="flex items-center gap-2 overflow-hidden flex-1" onclick="openChapter('${id}')">
-                        <i class="fa-solid fa-grip-vertical text-slate-300 dark:text-slate-600 cursor-grab active:cursor-grabbing handle shrink-0 hover:text-primary transition-colors"></i>
-                        <div class="flex flex-col min-w-0">
-                            <span class="text-sm font-medium truncate" title="${title}">${title}</span>
-                            <span class="text-[10px] text-slate-400 truncate">${href}</span>
-                        </div>
+                        <i class="fa-solid fa-grip-vertical text-slate-300 cursor-grab handle shrink-0"></i>
+                        <span class="text-sm font-medium truncate">${title}</span>
                     </div>
-                    <button onclick="handleDeleteChapter('${id}')" class="shrink-0 w-7 h-7 rounded text-slate-400 hover:bg-red-100 hover:text-red-500 dark:hover:bg-red-500/20 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center" title="Xóa chương">
-                        <i class="fa-solid fa-trash-can text-xs"></i>
-                    </button>
+                    <button onclick="handleDeleteChapter('${id}')" class="shrink-0 w-7 h-7 rounded text-slate-400 hover:text-red-500 opacity-0 group-hover:opacity-100 flex items-center justify-center"><i class="fa-solid fa-trash-can text-xs"></i></button>
                 `;
                 ui.list.appendChild(li);
             });
-
-            if (countMatch === 0 && spine.length > 0) {
-                ui.list.innerHTML = `<p class="text-xs text-center text-slate-500 mt-4">Không có chương khớp từ khóa.</p>`;
-            }
         }
 
-        ui.searchInput.addEventListener('input', (e) => renderSpineList(e.target.value));
+        ui.searchInput.oninput = (e) => renderSpineList(e.target.value);
 
         function initSortable() {
             if (spineSortable) spineSortable.destroy();
-            spineSortable = new Sortable(ui.list, {
-                handle: '.handle',
-                animation: 150,
-                ghostClass: 'sortable-ghost',
-                onEnd: function (evt) {
-                    const movedItem = spine.splice(evt.oldIndex, 1)[0];
-                    spine.splice(evt.newIndex, 0, movedItem);
-                }
-            });
+            spineSortable = new Sortable(ui.list, { handle: '.handle', animation: 150, onEnd: (evt) => {
+                const item = spine.splice(evt.oldIndex, 1)[0];
+                spine.splice(evt.newIndex, 0, item);
+            }});
         }
 
         function openChapter(id) {
-            handleSaveCurrent(false); 
-
+            handleSaveCurrent(false);
             currentActiveId = id;
-            const htmlStr = fileContents[id] || "";
-            
-            const bodyMatch = htmlStr.match(/<body\b[^>]*>([\s\S]*?)<\/body\s*>/gis);
-            if (bodyMatch && bodyMatch[1]) {
-                ui.editor.innerHTML = bodyMatch[1];
-            } else {
-                ui.editor.innerHTML = htmlStr;
-            }
-            
+            ui.textarea.value = fileContents[id] || "";
             ui.currentName.textContent = manifest[id];
             renderSpineList(ui.searchInput.value);
-            
             ui.welcome.classList.add('hidden');
             ui.editorContainer.classList.remove('hidden');
             ui.toolbar.classList.remove('hidden');
         }
 
-        function handleSaveCurrent(showNotification = false) {
+        function handleSaveCurrent(showToast = false) {
             if (!currentActiveId) return;
-            const newBody = ui.editor.innerHTML;
-            const oldHtml = fileContents[currentActiveId];
-            
-            const bodyRegex = /(<body\b[^>]*>)([\s\S]*?)(<\/body\s*>)/gis;
-            
-            if (bodyRegex.test(oldHtml)) {
-                bodyRegex.lastIndex = 0;
-                fileContents[currentActiveId] = oldHtml.replace(bodyRegex, function(match, p1, p2, p3) {
-                    return p1 + newBody + p3;
-                });
-            } else {
-                if (oldHtml.includes('<html') && oldHtml.includes('</html>')) {
-                    fileContents[currentActiveId] = oldHtml.replace(/<\/html>/i, `<body>${newBody}</body></html>`);
-                } else {
-                    fileContents[currentActiveId] = `<body>${newBody}</body>`;
-                }
-            }
-
-            // Cập nhật lại tiêu đề realtime khi người dùng sửa nội dung
+            fileContents[currentActiveId] = ui.textarea.value;
             fileTitles[currentActiveId] = extractTitle(fileContents[currentActiveId], manifest[currentActiveId]);
             renderSpineList(ui.searchInput.value);
-
-            if (showNotification) {
-                showToast("Đã lưu nội dung chương thành công!");
-            }
+            if (showToast) alert("Đã lưu chương thành công!");
         }
-
-        let typeTimeout;
-        ui.editor.addEventListener('input', () => {
-            clearTimeout(typeTimeout);
-            typeTimeout = setTimeout(() => { handleSaveCurrent(false); }, 1500);
-        });
 
         function handleCleanAllChapters() {
-            if(spine.length === 0) return showAlert("Chưa có chương nào được tải.");
-            
-            showConfirm(`Bạn có chắc muốn quét và dọn sạch dòng quảng cáo "如有惡意廣告" trong toàn bộ ${spine.length} chương?`, () => {
-                showLoading(`Đang dọn sạch quảng cáo toàn truyện...`);
-                
-                handleSaveCurrent(false);
-
-                let totalAdsRemoved = 0;
-
-                spine.forEach(id => {
-                    let htmlStr = fileContents[id] || "";
-                    const parser = new DOMParser();
-                    const doc = parser.parseFromString(htmlStr, 'text/html');
-                    
-                    const elements = doc.querySelectorAll('p, div, span, li, b, i, em, strong, section, blockquote');
-                    elements.forEach(el => {
-                        const text = el.textContent || "";
-                        if (text.includes("如有惡意廣告") || text.includes("截屏") || text.includes("發送至") || text.toLowerCase().includes("email protected")) {
-                            el.remove();
-                            totalAdsRemoved++;
-                        }
-                    });
-
-                    let cleanBodyHtml = doc.body ? doc.body.innerHTML : htmlStr;
-
-                    const bodyRegex = /(<body\b[^>]*>)([\s\S]*?)(<\/body\s*>)/gis;
-                    if (bodyRegex.test(htmlStr)) {
-                        bodyRegex.lastIndex = 0;
-                        fileContents[id] = htmlStr.replace(bodyRegex, function(match, p1, p2, p3) {
-                            return p1 + cleanBodyHtml + p3;
-                        });
-                    } else {
-                        fileContents[id] = `<body>${cleanBodyHtml}</body>`;
-                    }
-                });
-
-                if (currentActiveId) {
-                    openChapter(currentActiveId);
-                }
-
-                hideLoading();
-                showAlert(`Đã dọn sạch quảng cáo thành công!\n- Tổng số chương quét: ${spine.length}\n- Đã xóa chính xác: ${totalAdsRemoved} dòng quảng cáo.`);
-            });
-        }
-
-        function openFindReplace() {
-            if(spine.length === 0) return showAlert("Vui lòng mở file truyện trước.");
-            document.getElementById('find-replace-modal').classList.remove('hidden');
-        }
-
-        function executeFindReplaceAll() {
-            let findStr = document.getElementById('find-val').value;
-            const replaceStr = document.getElementById('replace-val').value;
-            const isRegex = document.getElementById('fr-is-regex').checked;
-            
-            if(!findStr) return showAlert("Vui lòng nhập chuỗi cần tìm!");
-            
-            document.getElementById('find-replace-modal').classList.add('hidden');
-            showLoading(`Đang thay thế hàng loạt trên ${spine.length} chương...`);
-            
+            if (!confirm("Dọn sạch rác quảng cáo '如有惡意廣告' toàn bộ truyện?")) return;
             handleSaveCurrent(false);
-            let totalMatches = 0;
-
-            try {
-                let regex = isRegex ? new RegExp(findStr, 'gi') : new RegExp(findStr.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
-                
-                spine.forEach(id => {
-                    let content = fileContents[id];
-                    const matches = content.match(regex);
-                    if (matches) {
-                        totalMatches += matches.length;
-                        fileContents[id] = content.replace(regex, replaceStr);
-                    }
-                    fileTitles[id] = extractTitle(fileContents[id], manifest[id]);
-                });
-
-                if (currentActiveId) {
-                    openChapter(currentActiveId);
+            let count = 0;
+            spine.forEach(id => {
+                let text = fileContents[id];
+                if (text.includes("如有惡意廣告")) {
+                    text = text.replace(/<p>[^<]*如有惡意廣告[^<]*<\/p>/gi, '');
+                    text = text.replace(/如有惡意廣告[^\n]*/gi, '');
+                    fileContents[id] = text;
+                    count++;
                 }
-
-                renderSpineList(ui.searchInput.value);
-                hideLoading();
-                showAlert(`Đã hoàn tất thay thế hàng loạt trên toàn bộ truyện!\n- Tổng số vị trí được thay thế: ${totalMatches}`);
-            } catch (err) {
-                hideLoading();
-                showAlert("Lỗi Regex: " + err.message);
-            }
+            });
+            if (currentActiveId) openChapter(currentActiveId);
+            alert(`Đã dọn sạch rác trên ${count} chương!`);
         }
 
-        function handleSplitChapter() {
-            if(!currentActiveId) return;
-            const sel = window.getSelection();
-            if(!sel.rangeCount) return showAlert("Vui lòng đặt con trỏ chuột tại vị trí muốn tách chương.");
-            
-            showConfirm("Chương hiện tại sẽ được cắt làm đôi tại vị trí con trỏ. Bạn đồng ý chứ?", () => {
-                const range = sel.getRangeAt(0);
-                const marker = document.createElement('hr');
-                marker.id = 'TAY_TUY_SPLIT_MARKER';
-                range.insertNode(marker);
-                
-                const html = ui.editor.innerHTML;
-                const parts = html.split('<hr id="TAY_TUY_SPLIT_MARKER">');
-                if(parts.length < 2) return showAlert("Lỗi khi tách nội dung.");
-                
-                ui.editor.innerHTML = parts[0];
-                handleSaveCurrent(false);
-                
-                const timestamp = Date.now();
-                const newId = `chapter_split_${timestamp}`;
-                const newHref = `chapter_${timestamp}.xhtml`;
-                
-                const baseHtml = fileContents[currentActiveId];
-                const part2Html = baseHtml.replace(/(<body\b[^>]*>)([\s\S]*?)(<\/body\s*>)/gis, '$1' + parts[1] + '$3');
-                
-                manifest[newId] = newHref;
-                reverseManifest[newHref] = newId;
-                fileContents[newId] = part2Html;
-                fileTitles[newId] = extractTitle(part2Html, newHref);
-                
-                const currIdx = spine.indexOf(currentActiveId);
-                spine.splice(currIdx + 1, 0, newId);
-                
-                renderSpineList(ui.searchInput.value);
-                showAlert("Tách chương thành công!");
-            });
-        }
+        function openFindReplace() { document.getElementById('find-replace-modal').classList.remove('hidden'); }
+        function executeFindReplaceAll() {
+            const find = document.getElementById('find-val').value;
+            const replace = document.getElementById('replace-val').value;
+            if (!find) return alert("Vui lòng nhập từ khóa cần tìm!");
+            document.getElementById('find-replace-modal').classList.add('hidden');
+            handleSaveCurrent(false);
 
-        function handleMergeNext() {
-            if(!currentActiveId) return;
-            const currIdx = spine.indexOf(currentActiveId);
-            if(currIdx === -1 || currIdx === spine.length - 1) return showAlert("Đây là chương cuối cùng, không có chương kế tiếp để gộp.");
-            
-            const nextId = spine[currIdx + 1];
-            const nextTitle = fileTitles[nextId] || manifest[nextId];
-            
-            showConfirm(`Xác nhận gộp nội dung của chương [${nextTitle}] vào cuối chương hiện tại?`, () => {
-                const parser = new DOMParser();
-                const nextDoc = parser.parseFromString(fileContents[nextId], 'text/html');
-                const nextBody = nextDoc.body ? nextDoc.body.innerHTML : fileContents[nextId];
-                
-                ui.editor.innerHTML = ui.editor.innerHTML + "<br/><br/><hr/><br/>" + nextBody;
-                handleSaveCurrent(false);
-                
-                spine.splice(currIdx + 1, 1);
-                renderSpineList(ui.searchInput.value);
-                showAlert("Gộp chương thành công!");
+            let count = 0;
+            spine.forEach(id => {
+                let content = fileContents[id];
+                if (content.includes(find)) {
+                    fileContents[id] = content.split(find).join(replace);
+                    count++;
+                }
             });
+            if (currentActiveId) openChapter(currentActiveId);
+            alert(`Đã thay thế thành công trên các chương có chứa từ khóa!`);
         }
 
         function handleAddChapter() {
-            const timestamp = Date.now();
-            const newId = `chapter_new_${timestamp}`;
-            const newHref = `chapter_${timestamp}.xhtml`;
-            const content = `<?xml version="1.0" encoding="utf-8"?>\n<!DOCTYPE html>\n<html xmlns="http://www.w3.org/1999/xhtml">\n<head><title>Chương mới</title></head>\n<body><h1>Chương mới ${timestamp}</h1><p>Nội dung...</p></body>\n</html>`;
-            
-            manifest[newId] = newHref;
-            reverseManifest[newHref] = newId;
-            spine.push(newId);
-            fileContents[newId] = content;
-            fileTitles[newId] = extractTitle(content, newHref);
-            
-            renderSpineList(ui.searchInput.value);
-            openChapter(newId);
+            const id = 'chap_new_' + Date.now();
+            const href = `chapter_${Date.now()}.xhtml`;
+            manifest[id] = href;
+            spine.push(id);
+            fileContents[id] = `<body><h1>Chương mới</h1><p>Nội dung...</p></body>`;
+            fileTitles[id] = "Chương mới";
+            renderSpineList();
+            openChapter(id);
         }
 
         function handleDeleteChapter(id) {
-            showConfirm(`Bạn có chắc chắn muốn xóa chương này?`, () => {
-                const idx = spine.indexOf(id);
-                if(idx > -1) spine.splice(idx, 1);
-                if(currentActiveId === id) {
-                    currentActiveId = null;
-                    ui.editorContainer.classList.add('hidden');
-                    ui.toolbar.classList.add('hidden');
-                    ui.welcome.classList.remove('hidden');
-                    ui.editor.innerHTML = '';
-                }
-                renderSpineList(ui.searchInput.value);
-            });
+            if (!confirm("Xóa chương này?")) return;
+            spine = spine.filter(s => s !== id);
+            if (currentActiveId === id) {
+                currentActiveId = null;
+                ui.editorContainer.classList.add('hidden');
+                ui.toolbar.classList.add('hidden');
+                ui.welcome.classList.remove('hidden');
+            }
+            renderSpineList();
         }
 
         async function handleExportEpub() {
             handleSaveCurrent(false);
-            
-            if (!epubZip || !opfDoc) {
-                return showAlert("Chưa có dữ liệu EPUB hợp lệ để xuất.");
-            }
-
             showLoading("Đang đóng gói file EPUB...");
             try {
                 const opfBasePath = opfPath.includes('/') ? opfPath.substring(0, opfPath.lastIndexOf('/') + 1) : '';
@@ -679,9 +371,7 @@
                 while(manifestNode.firstChild) manifestNode.removeChild(manifestNode.firstChild);
                 while(spineNode.firstChild) spineNode.removeChild(spineNode.firstChild);
                 
-                const usedManifestIds = new Set();
                 spine.forEach(id => {
-                    usedManifestIds.add(id);
                     const item = opfDoc.createElement('item');
                     item.setAttribute('id', id);
                     item.setAttribute('href', manifest[id]);
@@ -693,19 +383,6 @@
                     spineNode.appendChild(itemref);
                 });
                 
-                Object.keys(manifest).forEach(id => {
-                    if(!usedManifestIds.has(id)) {
-                        const href = manifest[id].toLowerCase();
-                        if(!href.endsWith('.html') && !href.endsWith('.xhtml')) {
-                            const item = opfDoc.createElement('item');
-                            item.setAttribute('id', id);
-                            item.setAttribute('href', manifest[id]);
-                            item.setAttribute('media-type', 'application/octet-stream');
-                            manifestNode.appendChild(item);
-                        }
-                    }
-                });
-                
                 const serializer = new XMLSerializer();
                 epubZip.file(opfPath, serializer.serializeToString(opfDoc));
                 
@@ -714,12 +391,27 @@
                 });
                 
                 const blob = await epubZip.generateAsync({ type: "blob", compression: "DEFLATE" });
-                saveAs(blob, "truyen_cleaned.epub");
+                saveAs(blob, "truyen_da_lam_sach.epub");
                 hideLoading();
             } catch(e) {
                 hideLoading();
-                showAlert("Lỗi xuất EPUB: " + e.message);
+                alert("Lỗi xuất file: " + e.message);
             }
+        }
+
+        function handleExportTxt() {
+            handleSaveCurrent(false);
+            let fullTxt = "";
+            spine.forEach(id => {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(fileContents[id], 'html');
+                const text = doc.body ? doc.body.textContent : fileContents[id];
+                fullTxt += `\n\n----------------------------------------\n`;
+                fullTxt += text.trim();
+                fullTxt += `\n----------------------------------------\n\n`;
+            });
+            const blob = new Blob([fullTxt.trim()], { type: "text/plain;charset=utf-8" });
+            saveAs(blob, "truyen_sach.txt");
         }
     </script>
 </body>
