@@ -153,7 +153,7 @@
         </section>
     </main>
 
-    <!-- Toast Notification Nhỏ Gọn (Góc trên bên phải) -->
+    <!-- Toast Notification Nhỏ Gọn -->
     <div id="toast" class="fixed top-5 right-5 z-[120] transform translate-y-[-20px] opacity-0 pointer-events-none transition-all duration-300">
         <div class="bg-slate-900 text-white dark:bg-white dark:text-slate-900 px-4 py-2.5 rounded-lg shadow-xl text-sm font-medium flex items-center gap-2.5 border border-slate-700 dark:border-slate-200">
             <i class="fa-solid fa-circle-check text-green-400 dark:text-green-600"></i>
@@ -267,7 +267,6 @@
             hideConfirm(); 
         };
 
-        // --- Hàm hiển thị Toast Notification nhỏ gọn ---
         function showToast(message = "Đã lưu thành công!") {
             const toast = document.getElementById('toast');
             document.getElementById('toast-message').textContent = message;
@@ -352,16 +351,19 @@
             reader.readAsArrayBuffer(file);
         }
 
+        // --- Cải tiến trích xuất tiêu đề thông minh ---
         function extractTitle(html, fallbackName) {
             const parser = new DOMParser();
             const doc = parser.parseFromString(html, 'text/html');
             
+            // 1. Ưu tiên tìm các thẻ tiêu đề (h1, h2, h3)
             const headingEl = doc.querySelector('h1, h2, h3');
             if (headingEl && headingEl.textContent.trim()) {
                 let text = headingEl.textContent.replace(/\s+/g, ' ').trim();
                 if (text.length > 0) return text;
             }
             
+            // 2. Dự phòng lấy từ thẻ <title>
             const titleEl = doc.querySelector('title');
             if (titleEl && titleEl.textContent.trim()) {
                 let text = titleEl.textContent.replace(/\s+/g, ' ').trim();
@@ -424,14 +426,13 @@
             });
         }
 
-        // ĐÃ SỬA: Dùng cờ /is thay vì /gis
         function openChapter(id) {
             handleSaveCurrent(false); 
 
             currentActiveId = id;
             const htmlStr = fileContents[id] || "";
             
-            const bodyMatch = htmlStr.match(/<body\b[^>]*>([\s\S]*?)<\/body\s*>/is);
+            const bodyMatch = htmlStr.match(/<body\b[^>]*>([\s\S]*?)<\/body\s*>/gis);
             if (bodyMatch && bodyMatch[1]) {
                 ui.editor.innerHTML = bodyMatch[1];
             } else {
@@ -446,15 +447,15 @@
             ui.toolbar.classList.remove('hidden');
         }
 
-        // ĐÃ SỬA: Dùng cờ /is thay vì /gis
         function handleSaveCurrent(showNotification = false) {
             if (!currentActiveId) return;
             const newBody = ui.editor.innerHTML;
             const oldHtml = fileContents[currentActiveId];
             
-            const bodyRegex = /(<body\b[^>]*>)([\s\S]*?)(<\/body\s*>)/is;
+            const bodyRegex = /(<body\b[^>]*>)([\s\S]*?)(<\/body\s*>)/gis;
             
             if (bodyRegex.test(oldHtml)) {
+                bodyRegex.lastIndex = 0;
                 fileContents[currentActiveId] = oldHtml.replace(bodyRegex, function(match, p1, p2, p3) {
                     return p1 + newBody + p3;
                 });
@@ -465,6 +466,10 @@
                     fileContents[currentActiveId] = `<body>${newBody}</body>`;
                 }
             }
+
+            // Cập nhật lại tiêu đề realtime khi người dùng sửa nội dung
+            fileTitles[currentActiveId] = extractTitle(fileContents[currentActiveId], manifest[currentActiveId]);
+            renderSpineList(ui.searchInput.value);
 
             if (showNotification) {
                 showToast("Đã lưu nội dung chương thành công!");
@@ -477,29 +482,40 @@
             typeTimeout = setTimeout(() => { handleSaveCurrent(false); }, 1500);
         });
 
-        // ĐÃ SỬA: Loại bỏ DOMParser, dùng Regex để xóa đúng dòng quảng cáo, bảo toàn 100% định dạng raw
         function handleCleanAllChapters() {
             if(spine.length === 0) return showAlert("Chưa có chương nào được tải.");
             
-            showConfirm(`Bạn có chắc muốn quét và dọn sạch dòng quảng cáo trong toàn bộ ${spine.length} chương?`, () => {
+            showConfirm(`Bạn có chắc muốn quét và dọn sạch dòng quảng cáo "如有惡意廣告" trong toàn bộ ${spine.length} chương?`, () => {
                 showLoading(`Đang dọn sạch quảng cáo toàn truyện...`);
                 
                 handleSaveCurrent(false);
+
                 let totalAdsRemoved = 0;
 
                 spine.forEach(id => {
                     let htmlStr = fileContents[id] || "";
-                    const originalLength = htmlStr.length;
-
-                    const adRegex1 = /如有惡意廣告(?:，|,)?請將截屏或錄屏發送至\s*(?:\[email\&\#160\;protected\]|\[email\s*protected\])/gi;
-                    const adRegex2 = /如有惡意廣告，請將截屏或錄屏發送至/gi;
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(htmlStr, 'text/html');
                     
-                    htmlStr = htmlStr.replace(adRegex1, '');
-                    htmlStr = htmlStr.replace(adRegex2, '');
+                    const elements = doc.querySelectorAll('p, div, span, li, b, i, em, strong, section, blockquote');
+                    elements.forEach(el => {
+                        const text = el.textContent || "";
+                        if (text.includes("如有惡意廣告") || text.includes("截屏") || text.includes("發送至") || text.toLowerCase().includes("email protected")) {
+                            el.remove();
+                            totalAdsRemoved++;
+                        }
+                    });
 
-                    if (htmlStr.length !== originalLength) {
-                        totalAdsRemoved++;
-                        fileContents[id] = htmlStr;
+                    let cleanBodyHtml = doc.body ? doc.body.innerHTML : htmlStr;
+
+                    const bodyRegex = /(<body\b[^>]*>)([\s\S]*?)(<\/body\s*>)/gis;
+                    if (bodyRegex.test(htmlStr)) {
+                        bodyRegex.lastIndex = 0;
+                        fileContents[id] = htmlStr.replace(bodyRegex, function(match, p1, p2, p3) {
+                            return p1 + cleanBodyHtml + p3;
+                        });
+                    } else {
+                        fileContents[id] = `<body>${cleanBodyHtml}</body>`;
                     }
                 });
 
@@ -508,7 +524,7 @@
                 }
 
                 hideLoading();
-                showAlert(`Đã dọn sạch quảng cáo thành công!\n- Tổng số chương quét: ${spine.length}\n- Đã dọn rác ở: ${totalAdsRemoved} chương.`);
+                showAlert(`Đã dọn sạch quảng cáo thành công!\n- Tổng số chương quét: ${spine.length}\n- Đã xóa chính xác: ${totalAdsRemoved} dòng quảng cáo.`);
             });
         }
 
@@ -540,12 +556,14 @@
                         totalMatches += matches.length;
                         fileContents[id] = content.replace(regex, replaceStr);
                     }
+                    fileTitles[id] = extractTitle(fileContents[id], manifest[id]);
                 });
 
                 if (currentActiveId) {
                     openChapter(currentActiveId);
                 }
 
+                renderSpineList(ui.searchInput.value);
                 hideLoading();
                 showAlert(`Đã hoàn tất thay thế hàng loạt trên toàn bộ truyện!\n- Tổng số vị trí được thay thế: ${totalMatches}`);
             } catch (err) {
@@ -577,13 +595,12 @@
                 const newHref = `chapter_${timestamp}.xhtml`;
                 
                 const baseHtml = fileContents[currentActiveId];
-                // ĐÃ SỬA: Dùng cờ /is thay vì /gis
-                const part2Html = baseHtml.replace(/(<body\b[^>]*>)([\s\S]*?)(<\/body\s*>)/is, '$1' + parts[1] + '$3');
+                const part2Html = baseHtml.replace(/(<body\b[^>]*>)([\s\S]*?)(<\/body\s*>)/gis, '$1' + parts[1] + '$3');
                 
                 manifest[newId] = newHref;
                 reverseManifest[newHref] = newId;
                 fileContents[newId] = part2Html;
-                fileTitles[newId] = "Chương (Được tách)";
+                fileTitles[newId] = extractTitle(part2Html, newHref);
                 
                 const currIdx = spine.indexOf(currentActiveId);
                 spine.splice(currIdx + 1, 0, newId);
@@ -625,7 +642,7 @@
             reverseManifest[newHref] = newId;
             spine.push(newId);
             fileContents[newId] = content;
-            fileTitles[newId] = "Chương mới";
+            fileTitles[newId] = extractTitle(content, newHref);
             
             renderSpineList(ui.searchInput.value);
             openChapter(newId);
