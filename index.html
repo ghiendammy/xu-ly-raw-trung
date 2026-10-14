@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EPUB Ultimate Studio - Tẩy Tủy Tông Sư</title>
+    <title>EPUB Ultimate Studio - Bảo Toàn Toàn Bộ Nội Dung</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -48,8 +48,8 @@
 
     <header class="bg-white dark:bg-slate-800 shadow-sm border-b border-slate-200 dark:border-slate-700 h-14 flex items-center justify-between px-4 shrink-0 z-10">
         <div class="flex items-center gap-3">
-            <i class="fa-solid fa-wand-magic-sparkles text-primary text-xl"></i>
-            <h1 class="font-bold text-base md:text-lg tracking-tight">EPUB Ultimate Studio (Đầy Đủ Tính Năng)</h1>
+            <i class="fa-solid fa-shield-heart text-primary text-xl"></i>
+            <h1 class="font-bold text-base md:text-lg tracking-tight">EPUB Ultimate Studio (Bảo Toàn 100% Chữ)</h1>
         </div>
         
         <div class="flex items-center gap-2 md:gap-3">
@@ -99,7 +99,7 @@
                 <span id="current-file-name" class="text-xs font-medium text-slate-400 truncate max-w-[150px] hidden md:block"></span>
             </div>
 
-            <!-- Khung soạn thảo văn bản (Raw Text Mode bảo toàn 100% chữ không lo mất) -->
+            <!-- Khung soạn thảo văn bản (Hiển thị trọn vẹn toàn bộ mã nguồn XHTML gốc từ đầu đến cuối) -->
             <div class="flex-1 overflow-hidden p-4 flex flex-col">
                 <div id="editor-container" class="flex-1 flex flex-col bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-4 hidden">
                     <textarea id="editor-textarea" class="w-full flex-1 bg-transparent text-slate-800 dark:text-slate-100 font-mono text-sm leading-relaxed outline-none resize-none" placeholder="Nội dung chương..."></textarea>
@@ -108,11 +108,11 @@
                 <div id="welcome-message" class="flex flex-col items-center justify-center text-slate-400 h-full text-center space-y-3">
                     <i class="fa-solid fa-feather text-6xl opacity-20"></i>
                     <h2 class="text-lg font-medium">Chọn một chương ở cột trái để bắt đầu chỉnh sửa</h2>
-                    <p class="text-sm">Bảo đảm không bao giờ bị mất tiêu đề hay khúc đầu chương!</p>
+                    <p class="text-sm">Bảo đảm giữ lại toàn bộ từng câu chữ từ đầu đến cuối chương!</p>
                 </div>
             </div>
 
-            <!-- Thanh xuất file ở dưới cùng: Đầy đủ nút xuất EPUB và xuất TXT -->
+            <!-- Thanh xuất file ở dưới cùng -->
             <div id="export-bar" class="h-14 bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 px-4 flex items-center justify-end gap-3 hidden">
                 <button onclick="handleExportTxt()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded shadow text-xs md:text-sm font-semibold flex items-center gap-2">
                     <i class="fa-solid fa-file-arrow-down"></i> Tải Về File TXT Sạch
@@ -239,6 +239,7 @@
             }
         }
 
+        // --- Thuật toán trích xuất tiêu đề thông minh không bao giờ bỏ sót ---
         function extractTitle(html, fallback) {
             const parser = new DOMParser();
             const doc = parser.parseFromString(html, 'text/html');
@@ -271,7 +272,8 @@
             });
         }
 
-        ui.searchInput.oninput = (e) => renderSpineList(e.target.value);
+        ui.searchInput.oninput = (e) => renderSpingListWithFilter(e.target.value);
+        function renderSpingListWithFilter(val) { renderSpineList(val); }
 
         function initSortable() {
             if (spineSortable) spineSortable.destroy();
@@ -284,6 +286,7 @@
         function openChapter(id) {
             handleSaveCurrent(false);
             currentActiveId = id;
+            // HIỂN THỊ NGUYÊN VẸN 100% NỘI DUNG GỐC (Bảo toàn hoàn toàn phần đầu và tiêu đề)
             ui.textarea.value = fileContents[id] || "";
             ui.currentName.textContent = manifest[id];
             renderSpineList(ui.searchInput.value);
@@ -325,16 +328,14 @@
             document.getElementById('find-replace-modal').classList.add('hidden');
             handleSaveCurrent(false);
 
-            let count = 0;
             spine.forEach(id => {
                 let content = fileContents[id];
                 if (content.includes(find)) {
                     fileContents[id] = content.split(find).join(replace);
-                    count++;
                 }
             });
             if (currentActiveId) openChapter(currentActiveId);
-            alert(`Đã thay thế thành công trên các chương có chứa từ khóa!`);
+            alert(`Đã thay thế thành công trên toàn bộ truyện!`);
         }
 
         function handleAddChapter() {
@@ -342,7 +343,7 @@
             const href = `chapter_${Date.now()}.xhtml`;
             manifest[id] = href;
             spine.push(id);
-            fileContents[id] = `<body><h1>Chương mới</h1><p>Nội dung...</p></body>`;
+            fileContents[id] = `<?xml version="1.0" encoding="utf-8"?>\n<html xmlns="http://www.w3.org/1999/xhtml">\n<head><title>Chương mới</title></head>\n<body><h1>Chương mới</h1><p>Nội dung...</p></body>\n</html>`;
             fileTitles[id] = "Chương mới";
             renderSpineList();
             openChapter(id);
